@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Top 100 music albums</string>
+    <string name="list_is_empty">List is empty</string>
+    <string name="content_description_loading_image_error">Loading image error</string>
+    <string name="visit_the_album">Visit The Album</string>
+    <string name="list_title">Top 100 Albums</string>
+
+</resources>

@@ -1,0 +1,93 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+subprojects {
+    ext {
+        compileSdkVersion = 32
+        minSdkVersion = 24
+        targetSdkVersion = 32
+    }
+}
+
+
+
+buildscript {
+    ext.kotlin_version = "1.7.10"
+    ext.koin_version = "3.2.0"
+    ext.gradleplugin_version = '7.2.1'
+    ext.detect_version = "1.20.0"
+    ext.coroutines_version = "1.6.2"
+
+    // Libraries
+    ext.lifecycle_version = "2.4.1"
+    ext.lottie_version = "5.2.0"
+    ext.okhttp_version = "4.9.3"
+    ext.gson_version = "2.8.9"
+    ext.retrofit_version = "2.6.0"
+    ext.room_version = "2.4.3"
+    ext.glide_version = "4.13.1"
+    ext.androidx_core_version = "1.8.0"
+    ext.androidx_appcombat_version = "1.4.2"
+    ext.androidx_constraint_version = "2.1.4"
+    ext.androidx_fragment_version = "1.5.1"
+    ext.androidx_material_version = "1.6.1"
+    ext.androidx_compose = "1.2.0"
+    ext.leakcanary_version = "2.8.1"
+
+    // Testing
+    ext.junit_version = "4.+"
+    ext.junitandroidx_version = "1.1.3"
+    ext.mockk_version = "1.10.4" // new version has problems with JDK 1.8
+
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$gradleplugin_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "io.gitlab.arturbosch.detekt:detekt-gradle-plugin:$detect_version"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+subprojects {
+    apply plugin: "io.gitlab.arturbosch.detekt"
+
+    detekt {
+        config = files("$rootProject.projectDir/detekt.yml")
+    }
+
+    dependencies {
+        detektPlugins "io.gitlab.arturbosch.detekt:detekt-formatting:$detect_version"
+    }
+
+    tasks.withType(io.gitlab.arturbosch.detekt.Detekt) {
+        jvmTarget = "1.8"
+        include "**/*.kt"
+        include "**/*.kts"
+        exclude "**/resources/"
+        exclude "**/build/"
+        reports {
+            html {
+                enabled = true
+                destination = file("$rootProject.buildDir/reports/detekt.html")
+            }
+        }
+    }
+}
+
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
