@@ -9,12 +9,31 @@ import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.commit
 import com.glowka.rafal.topmusic.presentation.utils.setLightTextColor
 import com.glowka.rafal.topmusic.presentation.utils.setStatusBarBackgroundColor
+import org.koin.core.qualifier.StringQualifier
+import org.koin.core.scope.Scope
 
 interface ScreenNavigator {
-  fun push(screen: Screen<*, *, *>)
+  fun <PARAM : Any,
+      EVENT : ScreenEvent,
+      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
+      > push(
+    scope : Scope,
+    screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+    param: PARAM,
+    onEvent: (EVENT) -> Unit
+  )
   fun popBack(screen: Screen<*, *, *>)
   fun popBackTo(screen: Screen<*, *, *>)
-  fun showDialog(screen: ScreenDialog<*, *, *>)
+  fun <
+      PARAM : Any,
+      EVENT : ScreenEvent,
+      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
+      > showDialog(
+    scope : Scope,
+    screenDialog: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+    param: PARAM,
+    onEvent: (EVENT) -> Unit
+  )
   fun hideDialog(screen: ScreenDialog<*, *, *>)
   fun startActivity(intent: Intent)
   fun finishActivity()
@@ -41,12 +60,22 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
     fragmentActivity = null
   }
 
-  override fun push(screen: Screen<*, *, *>) {
+  override fun <PARAM : Any,
+      EVENT : ScreenEvent,
+      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
+      > push(
+    scope : Scope,
+    screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+    param: PARAM,
+    onEvent: (EVENT) -> Unit
+  ) {
+    initFlowDestination(scope, FlowDestination(screen = screen, param = param), onEvent)
+
     val fragmentTag = screen.screenTag
     val fm = fragmentActivity
     if (fm == null) {
       waitingOperation = {
-        push(screen = screen)
+        push(scope = scope, screen = screen, param = param, onEvent = onEvent)
       }
     } else {
       fm.supportFragmentManager.commit {
@@ -85,12 +114,27 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
     }
   }
 
-  override fun showDialog(screen: ScreenDialog<*, *, *>) {
+  override fun <
+      PARAM : Any,
+      EVENT : ScreenEvent,
+      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
+      > showDialog(
+    scope : Scope,
+    screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+    param: PARAM,
+    onEvent: (EVENT) -> Unit
+  ) {
+    initFlowDestination(
+      scope = scope,
+      flowDestination = FlowDialogDestination(screen = screen, param = param),
+      onScreenEvent = onEvent
+    )
+
     val fragmentTag = screen.screenTag
     val fm = fragmentActivity
     if (fm == null) {
       waitingOperation = {
-        showDialog(screen = screen)
+        showDialog(scope = scope, screen = screen, param = param, onEvent = onEvent)
       }
     } else {
       if (screen.screenStructure.lightTextColor != null) {
@@ -148,6 +192,36 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
     }
   }
 
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <PARAM : Any, EVENT : ScreenEvent,
+    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScreenNavigator.initFlowDestination(
+  scope : Scope,
+  flowDestination: FlowDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+  onScreenEvent: (EVENT) -> Unit,
+) {
+  val qualifier = StringQualifier(flowDestination.screen.screenTag)
+  val viewModelToFlow =
+    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
+  viewModelToFlow?.init(param = flowDestination.param)
+    ?: throw IllegalStateException("Missing ${flowDestination.screen.screenTag} in the scope ${scope.id}")
+  viewModelToFlow.onScreenEvent = onScreenEvent
+}
+
+@Suppress("UNCHECKED_CAST")
+fun <PARAM : Any, EVENT : ScreenEvent,
+    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScreenNavigator.initFlowDestination(
+  scope : Scope,
+  flowDestination: FlowDialogDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+  onScreenEvent: (EVENT) -> Unit,
+) {
+  val qualifier = StringQualifier(flowDestination.screen.screenTag)
+  val viewModelToFlow =
+    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
+  viewModelToFlow?.init(param = flowDestination.param)
+    ?: throw IllegalStateException("Missing ${flowDestination.screen.screenTag} in the scope ${scope.id}")
+  viewModelToFlow.onScreenEvent = onScreenEvent
 }
 
 /**

@@ -57,11 +57,7 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
     param: PARAM,
     onEvent: (EVENT) -> Unit
   ): Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW> {
-    initFlowDestination(
-      flowDestination = FlowDestination(screen = screen, param = param),
-      onScreenEvent = onEvent
-    )
-    navigator.push(screen)
+    navigator.push(createScope(), screen, param, onEvent)
     return screen
   }
 
@@ -70,11 +66,7 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
     param: PARAM,
     onEvent: (EVENT) -> Unit
   ): ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW> {
-    initFlowDestination(
-      flowDestination = FlowDialogDestination(screen = screen, param = param),
-      onScreenEvent = onEvent
-    )
-    navigator.showDialog(screen)
+    navigator.showDialog(createScope(), screen, param, onEvent)
     return screen
   }
 
@@ -93,36 +85,6 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
     _flowScope?.close()
     closeScope()
   }
-}
-
-@Suppress("UNCHECKED_CAST")
-fun <PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> BaseFlow<*, *>.initFlowDestination(
-  flowDestination: FlowDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-  onScreenEvent: (EVENT) -> Unit,
-) {
-  val qualifier = StringQualifier(flowDestination.screen.screenTag)
-  val scope = createScope()
-  val viewModelToFlow =
-    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
-  viewModelToFlow?.init(param = flowDestination.param)
-    ?: throw IllegalStateException("Missing ${flowDestination.screen.screenTag} in the scope $flowScopeName")
-  viewModelToFlow.onScreenEvent = onScreenEvent
-}
-
-@Suppress("UNCHECKED_CAST")
-fun <PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> BaseFlow<*, *>.initFlowDestination(
-  flowDestination: FlowDialogDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-  onScreenEvent: (EVENT) -> Unit,
-) {
-  val qualifier = StringQualifier(flowDestination.screen.screenTag)
-  val scope = createScope()
-  val viewModelToFlow =
-    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
-  viewModelToFlow?.init(param = flowDestination.param)
-    ?: throw IllegalStateException("Missing ${flowDestination.screen.screenTag} in the scope $flowScopeName")
-  viewModelToFlow.onScreenEvent = onScreenEvent
 }
 
 @Suppress("UNCHECKED_CAST")

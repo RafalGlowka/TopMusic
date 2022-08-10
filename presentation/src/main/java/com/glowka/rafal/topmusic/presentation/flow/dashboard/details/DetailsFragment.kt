@@ -60,7 +60,7 @@ class DetailsFragment :
 
       MaterialTheme {
         systemUiController.setSystemBarsColor(
-          color = Color.Transparent,
+          color = if (useDarkIcons) Color(0x44FFFFFF) else Color(0x44000000), //.Transparent,
           darkIcons = useDarkIcons
         )
         val album = viewModelState.value.album
