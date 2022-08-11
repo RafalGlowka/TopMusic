@@ -8,4 +8,5 @@ object Colors {
   val gray = Color(0xFFb5b5b5)
   val authorName = Color(0xFF8e8e93)
   val blue = Color(0xFF007aff)
+  val buttonBack = Color(0xFFF1C5D2)
 }

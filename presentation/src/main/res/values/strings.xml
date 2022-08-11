@@ -5,5 +5,6 @@
     <string name="content_description_loading_image_error">Loading image error</string>
     <string name="visit_the_album">Visit The Album</string>
     <string name="list_title">Top 100 Albums</string>
+    <string name="content_description_back_button">Back button</string>
 
 </resources>

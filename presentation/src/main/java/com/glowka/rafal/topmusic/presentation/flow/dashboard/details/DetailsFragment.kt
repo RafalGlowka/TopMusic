@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +13,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyRow
@@ -22,12 +26,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults.elevation
 import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
@@ -35,6 +42,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.glowka.rafal.topmusic.domain.utils.inject
+import com.glowka.rafal.topmusic.domain.utils.logD
 import com.glowka.rafal.topmusic.presentation.R
 import com.glowka.rafal.topmusic.presentation.architecture.BaseFragment
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.State
@@ -51,7 +59,7 @@ import com.skydoves.landscapist.glide.GlideImage
 class DetailsFragment :
   BaseFragment<State, ViewEvents, DetailsViewModelToViewInterface>() {
 
-  val releaseDateFormatter: ReleaseDateFormatter by inject()
+  private val releaseDateFormatter: ReleaseDateFormatter by inject()
 
   override fun ComposeView.renderState(viewModelState: MutableState<State>) {
     setContent {
@@ -64,128 +72,165 @@ class DetailsFragment :
           darkIcons = useDarkIcons
         )
         val album = viewModelState.value.album
-        Column(
-          modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .padding()
-        ) {
-          GlideImage(
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+          val height = maxHeight
+//          val height2 = if (maxWidth.value> maxHeight.value) maxHeight else maxWidth
+          Column(
             modifier = Modifier
-              .fillMaxWidth()
-              .aspectRatio(1f),
-            imageModel = album.artworkUrl100,
-            loading = {
-              Box(
+              .heightIn(min = height)
+              .verticalScroll(rememberScrollState())
+          ) {
+            Column(
+              modifier = Modifier
+                .wrapContentSize()
+                .heightIn(min = height)
+            ) {
+              GlideImage(
                 modifier = Modifier
                   .fillMaxWidth()
                   .aspectRatio(1f),
-                contentAlignment = Alignment.Center
-              ) {
-                CircularProgressIndicator(
-                  modifier = Modifier
-                    .fillMaxWidth(fraction = 0.5f)
-                    .aspectRatio(1f)
-                )
-              }
-            },
-            failure = {
-              Image(
-                painterResource(R.drawable.music_error),
-                contentDescription = getString(R.string.content_description_loading_image_error),
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-              )
-            }
-          )
-          Column(
-            modifier = Modifier
-              .fillMaxWidth()
-              .padding(Margin.m4)
-          ) {
-
-            Text(
-              modifier = Modifier.wrapContentSize(),
-              textAlign = TextAlign.Left,
-              text = album.artistName,
-              color = Colors.authorName,
-              fontSize = FontSize.big,
-              fontFamily = Fonts.Regular
-            )
-            Text(
-              modifier = Modifier.wrapContentSize(),
-              textAlign = TextAlign.Left,
-              color = Colors.dark,
-              text = album.name,
-              fontSize = FontSize.title,
-              fontFamily = Fonts.Bold
-            )
-            Spacer(modifier = Modifier.width(Margin.m4))
-            LazyRow {
-              items(album.genres.size) { index ->
-                Text(
-                  text = album.genres[index].name,
-                  color = Colors.blue,
-                  fontFamily = Fonts.Medium,
-                  fontSize = FontSize.base,
-                  modifier = Modifier
-                    .border(
-                      width = 2.dp,
-                      color = Colors.blue,
-                      shape = RoundedCornerShape(15.dp)
+                imageModel = album.artworkUrl100,
+                loading = {
+                  Box(
+                    modifier = Modifier
+                      .fillMaxWidth()
+                      .aspectRatio(1f),
+                    contentAlignment = Alignment.Center
+                  ) {
+                    CircularProgressIndicator(
+                      modifier = Modifier
+                        .fillMaxWidth(fraction = 0.5f)
+                        .aspectRatio(1f)
                     )
-                    .padding(
-                      vertical = Margin.m1,
-                      horizontal = Margin.m2
-                    ),
-                )
-                Spacer(modifier = Modifier.width(Margin.m2))
-              }
-            }
-            Spacer(modifier = Modifier.height(40.dp))
-
-            Column(
-              modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(),
-              verticalArrangement = Arrangement.Center,
-              horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-              Text(
-                modifier = Modifier.wrapContentSize(),
-                textAlign = TextAlign.Center,
-                text = releaseDateFormatter.format(album.releaseDate),
-                color = Colors.gray,
-                fontSize = FontSize.small,
-                fontFamily = Fonts.Medium
-              )
-              Text(
-                modifier = Modifier.wrapContentSize(),
-                textAlign = TextAlign.Center,
-                color = Colors.gray,
-                text = album.copyright,
-                fontSize = FontSize.small,
-                fontFamily = Fonts.Medium
-              )
-              Spacer(modifier = Modifier.height(Margin.m6))
-              Button(
-                shape = RoundedCornerShape(15.dp),
-                elevation = elevation(
-                  defaultElevation = 0.dp,
-                  pressedElevation = 0.dp
-                ),
-                onClick = {
-                  viewModel.onViewEvent(ViewEvents.OpenURL)
+                  }
                 },
-                modifier = Modifier.padding(Margin.m3)
+                failure = {
+                  Image(
+                    painterResource(R.drawable.music_error),
+                    contentDescription = getString(R.string.content_description_loading_image_error),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                  )
+                }
+              )
+              Column(
+                modifier = Modifier
+                  .fillMaxSize()
+                  .weight(1f)
+//                  .heightIn(min = height2)
+//                  .padding(Margin.m4)
               ) {
+
                 Text(
-                  text = getString(R.string.visit_the_album),
-                  fontFamily = Fonts.Semibold,
-                  fontSize = FontSize.base,
-                  color = Colors.white,
+                  modifier = Modifier.wrapContentSize(),
+                  textAlign = TextAlign.Left,
+                  text = album.artistName,
+                  color = Colors.authorName,
+                  fontSize = FontSize.big,
+                  fontFamily = Fonts.Regular
                 )
+                Text(
+                  modifier = Modifier.wrapContentSize(),
+                  textAlign = TextAlign.Left,
+                  color = Colors.dark,
+                  text = album.name,
+                  fontSize = FontSize.title,
+                  fontFamily = Fonts.Bold
+                )
+                Spacer(modifier = Modifier.width(Margin.m4))
+                LazyRow {
+                  items(album.genres.size) { index ->
+                    Text(
+                      text = album.genres[index].name,
+                      color = Colors.blue,
+                      fontFamily = Fonts.Medium,
+                      fontSize = FontSize.base,
+                      modifier = Modifier
+                        .border(
+                          width = 2.dp,
+                          color = Colors.blue,
+                          shape = RoundedCornerShape(15.dp)
+                        )
+                        .padding(
+                          vertical = Margin.m1,
+                          horizontal = Margin.m2
+                        ),
+                    )
+                    Spacer(modifier = Modifier.width(Margin.m2))
+                  }
+                }
+                Spacer(modifier = Modifier.height(40.dp))
+
+                Column(
+                  modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(),
+                  verticalArrangement = Arrangement.Bottom,
+                  horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                  Text(
+                    modifier = Modifier.wrapContentSize(),
+                    textAlign = TextAlign.Center,
+                    text = releaseDateFormatter.format(album.releaseDate),
+                    color = Colors.gray,
+                    fontSize = FontSize.small,
+                    fontFamily = Fonts.Medium
+                  )
+                  Text(
+                    modifier = Modifier.wrapContentSize(),
+                    textAlign = TextAlign.Center,
+                    color = Colors.gray,
+                    text = album.copyright,
+                    fontSize = FontSize.small,
+                    fontFamily = Fonts.Medium
+                  )
+                  Spacer(modifier = Modifier.height(Margin.m6))
+                  Button(
+                    shape = RoundedCornerShape(15.dp),
+                    elevation = elevation(
+                      defaultElevation = 0.dp,
+                      pressedElevation = 0.dp
+                    ),
+                    onClick = {
+                      viewModel.onViewEvent(ViewEvents.OpenURL)
+                    },
+                    modifier = Modifier.padding(Margin.m3)
+                  ) {
+                    Text(
+                      text = getString(R.string.visit_the_album),
+                      fontFamily = Fonts.Semibold,
+                      fontSize = FontSize.base,
+                      color = Colors.white,
+                    )
+                  }
+                  Spacer(modifier = Modifier.height(Margin.m6))
+                }
               }
             }
+          }
+          // I choose to make a floating back button over the image.
+          IconButton(
+            modifier = Modifier
+              .wrapContentSize()
+              .padding(16.dp)
+              .systemBarsPadding(),
+            onClick = { viewModel.onViewEvent(ViewEvents.Close) }
+          ) {
+            Icon(
+              modifier = Modifier
+                .width(44.dp)
+                .height(44.dp)
+                .padding(10.dp)
+                .drawBehind {
+                  logD("Size ${this.size.maxDimension}")
+                  drawCircle(
+                    color = Colors.buttonBack,
+                    radius = 22.dp.toPx()
+                  )
+                },
+              painter = painterResource(id = R.drawable.ic_back),
+              contentDescription = getString(R.string.content_description_back_button)
+            )
           }
         }
       }

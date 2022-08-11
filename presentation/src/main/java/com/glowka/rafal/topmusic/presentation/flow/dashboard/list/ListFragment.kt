@@ -169,7 +169,7 @@ class ListFragment :
         ) {
           Text(
             modifier = Modifier.wrapContentSize(),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Left,
             text = album.name,
             color = Color.White,
             fontFamily = Fonts.Semibold,
@@ -177,7 +177,7 @@ class ListFragment :
           )
           Text(
             modifier = Modifier.wrapContentSize(),
-            textAlign = TextAlign.Center,
+            textAlign = TextAlign.Left,
             text = album.artistName,
             color = Color.Gray,
             fontFamily = Fonts.Medium,
