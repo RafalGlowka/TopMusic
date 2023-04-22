@@ -2,15 +2,13 @@ package com.glowka.rafal.topmusic.presentation.flow.dashboard
 
 import android.content.Intent
 import android.net.Uri
-import androidx.core.content.ContextCompat.startActivity
+import com.glowka.rafal.topmusic.domain.utils.EMPTY
 import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.logD
 import com.glowka.rafal.topmusic.presentation.architecture.BaseFlow
 import com.glowka.rafal.topmusic.presentation.architecture.Screen
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface
-import com.glowka.rafal.topmusic.presentation.utils.exhaustive
-
 
 sealed class DashboardResult {
   object Terminated : DashboardResult()
@@ -27,7 +25,7 @@ class DashboardFlowImpl :
       when (event) {
         is ListViewModelToFlowInterface.Event.ShowDetails -> showDetails(event)
         ListViewModelToFlowInterface.Event.Back -> finish(result = DashboardResult.Terminated)
-      }.exhaustive
+      }
     }
   }
 
@@ -48,8 +46,7 @@ class DashboardFlowImpl :
           intent.data = Uri.parse(event.url)
           navigator.startActivity(intent)
         }
-      }.exhaustive
+      }
     }
   }
-
 }

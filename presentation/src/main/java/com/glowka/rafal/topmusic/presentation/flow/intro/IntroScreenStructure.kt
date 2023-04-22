@@ -8,8 +8,7 @@ object IntroScreenStructure : ScreenStructure<EmptyParam, IntroViewModelToFlowIn
     IntroViewModelToFlowInterface, IntroViewModelToViewInterface>() {
   override val fragmentClass = IntroFragment::class
   override fun Scope.viewModelCreator() = IntroViewModelImpl(
-    initLocalRepositoryUseCase = get(),
-    refreshAlbumsUseCase = get(),
+    musicRepository = get(),
     snackBarService = get(),
   )
 }

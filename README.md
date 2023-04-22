@@ -11,19 +11,22 @@ The purpose of this application is to show usage of some basic libraries and arc
 * Lottie
 
 ## Screen shots
-![Splash screen](/screens/screen1.png)
-![Splash screen with network error and retry action](/screens/screen1_error.png)
-![List of albums - loading thumbnails](/screens/screen2.png)
-![List of albums - loading thumbnails error](/screens/screen2_error.png)
-![List of albums](/screens/screen3.png)
-![Album details](screens/screen4.png)
+|                    Splash                    |                Splash with connection error                |
+|:--------------------------------------------:|:----------------------------------------------------------:|
+| <img src="/screens/screen1.png" width="300"> | <img src="/screens/screen1_error.png" width="300"> |
+|     List of albums - loading thumbnails      | List of albums - loading thumbnails error |
+| <img src="/screens/screen2.png" width="300"> | <img src="/screens/screen2_error.png" width="300"> |
+|                List of albums                | Album details |
+|        <img src="/screens/screen3.png" width="300">        | <img src="screens/screen4.png" width="300"> |
 
 ## Screen shots in landscape orientation
-![Splash screen](/screens/screen1L.png)
-![List of albums - loading thumbnails error](/screens/screen2_errorL.png)
-![List of albums](/screens/screen3L.png)
-![Album details - top section](screens/screen4L1.png)
-![Album details - bottom section](screens/screen4L2.png)
+|                    Splash                     |                Splash with connection error                |
+|:---------------------------------------------:|:----------------------------------------------------------:|
+| <img src="screens/screen1L.png" width="300">  | |
+|                List of albums                 | List of albums - loading thumbnails error |
+| <img src="/screens/screen3L.png" width="300"> | <img src="/screens/screen2_errorL.png" width="300"> |
+|          Album details - top section          | Album details - bottom section |
+|        <img src="screens/screen4L1.png" width="300">         | <img src="screens/screen4L2.png" width="300"> |
 
 ## Video
 ![Video from testing](video/Testing.mp4)

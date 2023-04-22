@@ -1,10 +1,7 @@
 package com.glowka.rafal.topmusic.presentation.flow.intro
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
+import com.glowka.rafal.topmusic.domain.repository.MusicRepository
 import com.glowka.rafal.topmusic.domain.service.SnackBarService
-import com.glowka.rafal.topmusic.domain.usecase.InitLocalRepositoryUseCase
-import com.glowka.rafal.topmusic.domain.usecase.RefreshAlbumsUseCase
 import com.glowka.rafal.topmusic.domain.usecase.UseCaseResult
 import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.collectUseCase
@@ -22,9 +19,9 @@ import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToViewInt
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 
 interface IntroViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, Event> {
   sealed class Event : ScreenEvent {
@@ -33,17 +30,13 @@ interface IntroViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, E
 }
 
 interface IntroViewModelToViewInterface : ViewModelToViewInterface<State, ViewEvents> {
-  data class State(
-    val emptyState: EmptyParam = EmptyParam.EMPTY
-  )
-
-  sealed class ViewEvents {}
+  class State
+  sealed class ViewEvents
 }
 
 class IntroViewModelImpl(
   private val snackBarService: SnackBarService,
-  private val initLocalRepositoryUseCase: InitLocalRepositoryUseCase,
-  private val refreshAlbumsUseCase: RefreshAlbumsUseCase,
+  private val musicRepository: MusicRepository,
 ) : IntroViewModelToFlowInterface, IntroViewModelToViewInterface,
   BaseViewModel<EmptyParam, Event, State, ViewEvents>(
     backPressedEvent = null
@@ -53,31 +46,31 @@ class IntroViewModelImpl(
   var data = false
 
   override fun init(param: EmptyParam) {
-    initialDataFeatch()
+    initialDataFetch()
 
     launch {
-      delay(4000)
+      delay(MIN_SHOW_TIME_MS)
       animation = true
-      if (data && animation) showNext()
+      if (data) showNext()
     }
   }
 
   @OptIn(FlowPreview::class)
-  private fun initialDataFeatch() {
+  private fun initialDataFetch() {
     launch {
-      initLocalRepositoryUseCase(param = EmptyParam.EMPTY).flatMapConcat { result ->
+      musicRepository.init().flatMapConcat { result ->
         logD("data init was: $result")
         if (result is UseCaseResult.Success<Boolean> && result.data) {
           flowOf(UseCaseResult.Success(true))
         } else {
-          refreshAlbumsUseCase(param = EmptyParam.EMPTY).mapSuccess { list -> list.isNotEmpty() }
+          musicRepository.reloadFromBackend().mapSuccess { list -> list.isNotEmpty() }
         }
       }.collectUseCase(
         onSuccess = { result ->
           onMain {
             if (result) {
               data = true
-              if (data && animation) showNext()
+              if (animation) showNext()
             } else showError("Something went wrong.")
           }
         },
@@ -97,7 +90,7 @@ class IntroViewModelImpl(
       duration = Snackbar.LENGTH_INDEFINITE,
       actionLabel = "Retry",
       action = {
-        initialDataFeatch()
+        initialDataFetch()
       }
     )
   }
@@ -106,9 +99,13 @@ class IntroViewModelImpl(
     sendEvent(event = Event.Finished)
   }
 
-  override val state: MutableState<State> = mutableStateOf(State())
+  override val viewState = MutableStateFlow(State())
 
   override fun onViewEvent(event: ViewEvents) {
     // Nop
+  }
+
+  companion object {
+    const val MIN_SHOW_TIME_MS = 4000L
   }
 }

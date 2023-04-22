@@ -1,7 +1,5 @@
 package com.glowka.rafal.topmusic.presentation.flow.dashboard.details
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import com.glowka.rafal.topmusic.domain.model.Album
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
@@ -10,8 +8,10 @@ import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterf
 import com.glowka.rafal.topmusic.presentation.architecture.launch
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Event
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Param
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.State
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewState
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewEvents
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 interface DetailsViewModelToFlowInterface : ViewModelToFlowInterface<Param, Event> {
   data class Param(val album: Album)
@@ -21,8 +21,8 @@ interface DetailsViewModelToFlowInterface : ViewModelToFlowInterface<Param, Even
   }
 }
 
-interface DetailsViewModelToViewInterface : ViewModelToViewInterface<State, ViewEvents> {
-  data class State(
+interface DetailsViewModelToViewInterface : ViewModelToViewInterface<ViewState, ViewEvents> {
+  data class ViewState(
     val album: Album
   )
 
@@ -32,22 +32,19 @@ interface DetailsViewModelToViewInterface : ViewModelToViewInterface<State, View
   }
 }
 
-class DetailsViewModelImpl(
-) : DetailsViewModelToViewInterface, DetailsViewModelToFlowInterface,
-  BaseViewModel<Param, Event, State, ViewEvents>(
+class DetailsViewModelImpl : DetailsViewModelToViewInterface, DetailsViewModelToFlowInterface,
+  BaseViewModel<Param, Event, ViewState, ViewEvents>(
     backPressedEvent = Event.Back
   ) {
 
-  override val state: MutableState<State> = mutableStateOf(State(Album()))
+  override val viewState = MutableStateFlow(ViewState(Album()))
 
   lateinit var param: Param
 
   override fun init(param: Param) {
     this.param = param
 
-    state.value = state.value.copy(
-      album = param.album
-    )
+    viewState.update { state -> state.copy(album = param.album) }
   }
 
   override fun onViewEvent(event: ViewEvents) {

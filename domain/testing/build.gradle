@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'kotlin-kapt'
+}
+
+android {
+    namespace 'com.glowka.rafal.topmusic.domain.testing'
+    compileSdk project.ext.compileSdkVersion
+
+    defaultConfig {
+
+        minSdkVersion project.ext.minSdkVersion
+        targetSdkVersion project.ext.targetSdkVersion
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+android.testOptions {
+    unitTests.all {
+        it.useJUnitPlatform()
+    }
+}
+
+dependencies {
+    implementation project(":domain")
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
+    implementation "junit:junit:$junit_version"
+    implementation "io.mockk:mockk:$mockk_version"
+    implementation "io.kotest:kotest-runner-junit5:$kotest_version"
+    implementation "io.kotest:kotest-property:$kotest_version"
+    implementation "app.cash.turbine:turbine:$turbine_version"
+}

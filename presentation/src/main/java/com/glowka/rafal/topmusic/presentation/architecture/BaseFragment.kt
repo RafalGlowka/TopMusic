@@ -4,9 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
+import kotlinx.coroutines.flow.StateFlow
 
 abstract class BaseFragment<
     VIEW_STATE : Any,
@@ -18,13 +22,14 @@ abstract class BaseFragment<
     inflater: LayoutInflater,
     container: ViewGroup?,
     savedInstanceState: Bundle?
-  ): View? {
+  ): View {
     return ComposeView(requireContext()).apply {
-      renderState(viewModel.state)
+      setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+      setContent(content)
     }
   }
 
-  abstract fun ComposeView.renderState(viewModelState: MutableState<VIEW_STATE>)
+  abstract val content: @Composable () -> Unit
 
   fun onBackPressed(): Boolean {
     return viewModel.onBackPressed()

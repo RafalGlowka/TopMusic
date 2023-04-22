@@ -1,0 +1,57 @@
+package com.glowka.rafal.topmusic.presentation.flow.intro
+
+import app.cash.turbine.test
+import com.glowka.rafal.topmusic.domain.utils.EmptyParam
+import com.glowka.rafal.topmusic.presentation.FlowSpec
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.DashboardFlow
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.DashboardResult
+import com.glowka.rafal.topmusic.presentation.utils.FakeFlow
+import com.glowka.rafal.topmusic.presentation.utils.FakeScreenNavigator
+import com.glowka.rafal.topmusic.presentation.utils.emitScreenEvent
+import com.glowka.rafal.topmusic.presentation.utils.shouldBeNavigationToScreen
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.shouldBe
+
+class IntroFlowSpec : FlowSpec() {
+
+  init {
+    val dashboardFlow = object : DashboardFlow, FakeFlow<EmptyParam, DashboardResult>() {}
+
+    val flow = IntroFlowImpl(
+      dashboardFlow = dashboardFlow
+    )
+
+    val navigator = FakeScreenNavigator()
+
+    it("shows intro screen after which it starts dashboard and terminates with dashboard flow") {
+      var flowFinished = false
+      dashboardFlow.startEvents.test {
+        val dashboardStartEvents = this
+        navigator.navigationEvents.test {
+
+          flow.start(navigator, EmptyParam.EMPTY) { event ->
+            when (event) {
+              IntroResult.Terminated -> flowFinished = true
+            }
+          }
+
+          dashboardStartEvents.expectNoEvents()
+          awaitItem()
+            .shouldBeNavigationToScreen(
+              screen = IntroFlow.Screens.Start,
+              param = EmptyParam.EMPTY,
+            )
+            .emitScreenEvent(IntroViewModelToFlowInterface.Event.Finished)
+
+          dashboardStartEvents.awaitItem().run {
+            param shouldBe EmptyParam.EMPTY
+            flowFinished.shouldBeFalse()
+            onResult(DashboardResult.Terminated)
+            flowFinished.shouldBeTrue()
+          }
+        }
+      }
+    }
+  }
+}

@@ -17,11 +17,12 @@ interface ScreenNavigator {
       EVENT : ScreenEvent,
       VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
       > push(
-    scope : Scope,
+    scope: Scope,
     screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
     param: PARAM,
     onEvent: (EVENT) -> Unit
   )
+
   fun popBack(screen: Screen<*, *, *>)
   fun popBackTo(screen: Screen<*, *, *>)
   fun <
@@ -29,11 +30,12 @@ interface ScreenNavigator {
       EVENT : ScreenEvent,
       VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
       > showDialog(
-    scope : Scope,
+    scope: Scope,
     screenDialog: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
     param: PARAM,
     onEvent: (EVENT) -> Unit
   )
+
   fun hideDialog(screen: ScreenDialog<*, *, *>)
   fun startActivity(intent: Intent)
   fun finishActivity()
@@ -64,7 +66,7 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
       EVENT : ScreenEvent,
       VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
       > push(
-    scope : Scope,
+    scope: Scope,
     screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
     param: PARAM,
     onEvent: (EVENT) -> Unit
@@ -119,7 +121,7 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
       EVENT : ScreenEvent,
       VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
       > showDialog(
-    scope : Scope,
+    scope: Scope,
     screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
     param: PARAM,
     onEvent: (EVENT) -> Unit
@@ -197,7 +199,7 @@ class FragmentNavigatorImpl(val containerId: Int) : FragmentActivityAttachment,
 @Suppress("UNCHECKED_CAST")
 fun <PARAM : Any, EVENT : ScreenEvent,
     VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScreenNavigator.initFlowDestination(
-  scope : Scope,
+  scope: Scope,
   flowDestination: FlowDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
   onScreenEvent: (EVENT) -> Unit,
 ) {
@@ -212,7 +214,7 @@ fun <PARAM : Any, EVENT : ScreenEvent,
 @Suppress("UNCHECKED_CAST")
 fun <PARAM : Any, EVENT : ScreenEvent,
     VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScreenNavigator.initFlowDestination(
-  scope : Scope,
+  scope: Scope,
   flowDestination: FlowDialogDestination<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
   onScreenEvent: (EVENT) -> Unit,
 ) {

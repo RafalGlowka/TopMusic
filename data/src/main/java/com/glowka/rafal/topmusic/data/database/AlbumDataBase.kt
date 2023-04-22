@@ -7,7 +7,7 @@ import com.glowka.rafal.topmusic.data.dao.AlbumDao
 import com.glowka.rafal.topmusic.data.dso.AlbumDso
 
 @Database(entities = [AlbumDso::class], version = 1)
-@TypeConverters(GendresDataConverter::class)
+@TypeConverters(GenresDataConverter::class)
 abstract class AlbumDatabase : RoomDatabase() {
   abstract fun albumDao(): AlbumDao
 }

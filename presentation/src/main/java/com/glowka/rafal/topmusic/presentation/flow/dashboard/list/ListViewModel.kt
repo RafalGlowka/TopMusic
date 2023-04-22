@@ -1,12 +1,8 @@
 package com.glowka.rafal.topmusic.presentation.flow.dashboard.list
 
-import androidx.compose.runtime.mutableStateOf
 import com.glowka.rafal.topmusic.domain.model.Album
-import com.glowka.rafal.topmusic.domain.usecase.GetAlbumsUseCase
-import com.glowka.rafal.topmusic.domain.usecase.RefreshAlbumsUseCase
-import com.glowka.rafal.topmusic.domain.utils.EMPTY
+import com.glowka.rafal.topmusic.domain.repository.MusicRepository
 import com.glowka.rafal.topmusic.domain.utils.EmptyParam
-import com.glowka.rafal.topmusic.domain.utils.StringResolver
 import com.glowka.rafal.topmusic.domain.utils.collectUseCase
 import com.glowka.rafal.topmusic.domain.utils.logD
 import com.glowka.rafal.topmusic.presentation.R
@@ -14,11 +10,15 @@ import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterface
+import com.glowka.rafal.topmusic.presentation.architecture.compose.Text
 import com.glowka.rafal.topmusic.presentation.architecture.launch
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface.Event
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToViewInterface.State
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToViewInterface.ViewEvents
-import com.glowka.rafal.topmusic.presentation.utils.exhaustive
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToViewInterface.ViewState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.update
 
 interface ListViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, Event> {
   sealed class Event : ScreenEvent {
@@ -29,40 +29,31 @@ interface ListViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, Ev
   fun refresh()
 }
 
-interface ListViewModelToViewInterface : ViewModelToViewInterface<State, ViewEvents> {
+interface ListViewModelToViewInterface : ViewModelToViewInterface<ViewState, ViewEvents> {
   sealed class ViewEvents {
     data class PickedAlbum(val album: Album) : ViewEvents()
     object RefreshList : ViewEvents()
   }
 
-  data class State(
-    val errorMessage: String = String.EMPTY,
+  data class ViewState(
+    val errorMessage: Text = Text.EMPTY,
     val isRefreshing: Boolean = false,
     val items: List<Album> = emptyList()
   )
 }
 
 class ListViewModelImpl(
-  private val stringResolver: StringResolver,
-  private val refreshAlbumsUseCase: RefreshAlbumsUseCase,
-  private val getAlbumsUseCase: GetAlbumsUseCase,
+  private val musicRepository: MusicRepository,
 ) : ListViewModelToViewInterface, ListViewModelToFlowInterface,
-  BaseViewModel<EmptyParam, Event, State, ViewEvents>(
+  BaseViewModel<EmptyParam, Event, ViewState, ViewEvents>(
     backPressedEvent = Event.Back
   ) {
-  override val state = mutableStateOf(State())
+  override val viewState = MutableStateFlow(ViewState())
 
   override fun init(param: EmptyParam) {
-    launch {
-      state.value = state.value.copy(
-        isRefreshing = true
-      )
-      getAlbumsUseCase(EmptyParam.EMPTY).collectUseCase(
-        onSuccess = { list ->
-          updateList(list)
-        }
-      )
-    }
+    musicRepository.albums
+      .onEach { albums -> updateList(albums) }
+      .launchIn(viewModelScope)
   }
 
   override fun onViewEvent(event: ViewEvents) {
@@ -77,35 +68,40 @@ class ListViewModelImpl(
       ViewEvents.RefreshList -> {
         refresh()
       }
-    }.exhaustive
+    }
   }
 
   private fun updateList(albums: List<Album>) {
     logD("updateList ${albums.size}")
     if (albums.isEmpty()) {
-      val errorMessage = stringResolver(R.string.list_is_empty)
-      state.value = state.value.copy(
-        items = emptyList(),
-        errorMessage = errorMessage,
-        isRefreshing = false,
-      )
+      val errorMessage = Text.of(R.string.list_is_empty)
+      viewState.update { state ->
+        state.copy(
+          items = emptyList(),
+          errorMessage = errorMessage,
+          isRefreshing = false,
+        )
+      }
     } else {
-      state.value = state.value.copy(
-        errorMessage = String.EMPTY,
-        items = albums,
-        isRefreshing = false
-      )
+      viewState.update { state ->
+        state.copy(
+          errorMessage = Text.EMPTY,
+          items = albums,
+          isRefreshing = false
+        )
+      }
     }
   }
 
   override fun refresh() {
     launch {
-      state.value = state.value.copy(
-        isRefreshing = true
-      )
-      refreshAlbumsUseCase(param = EmptyParam.EMPTY).collectUseCase(
-        onSuccess = { list ->
-          updateList(list)
+      viewState.update { state -> state.copy(isRefreshing = true) }
+      musicRepository.reloadFromBackend().collectUseCase(
+        onSuccess = {
+          viewState.update { state -> state.copy(isRefreshing = false) }
+        },
+        onError = {
+          viewState.update { state -> state.copy(isRefreshing = false) }
         }
       )
     }

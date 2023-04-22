@@ -1,7 +1,5 @@
 package com.glowka.rafal.topmusic.presentation.architecture
 
-import androidx.compose.runtime.MutableState
-import androidx.lifecycle.LifecycleOwner
 import com.glowka.rafal.topmusic.domain.utils.CoroutineErrorHandler
 import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.inject
@@ -12,12 +10,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
 
 interface ViewModelToViewInterface<VIEWSTATE : Any, VIEWEVENT : Any> {
-  val state: MutableState<VIEWSTATE>
+  val viewState: StateFlow<VIEWSTATE>
   fun onViewEvent(event: VIEWEVENT)
   fun onBackPressed(): Boolean
 }
@@ -41,7 +40,7 @@ abstract class BaseViewModel<PARAM : Any, EVENT : ScreenEvent, VIEWSTATE : Any, 
 
   override lateinit var onScreenEvent: (EVENT) -> Unit
 
-//  var lifecycleOwner: LifecycleOwner? = null
+  //  var lifecycleOwner: LifecycleOwner? = null
   private var _viewModelScope: CloseableCoroutineScope? = null
   val viewModelScope: CoroutineScope
     get() {
