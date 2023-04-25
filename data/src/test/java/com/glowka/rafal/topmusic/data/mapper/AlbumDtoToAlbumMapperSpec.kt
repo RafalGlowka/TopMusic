@@ -16,9 +16,9 @@ class AlbumDtoToAlbumMapperSpec : DescribeSpec() {
     it("maps received data") {
 
       @Suppress("MaxLineLength")
-      forAll(100) { givenAlbumId: String, givenAlbumName: String, givenArtistName: String, givenReleaseDate: String, givenArtworkUrl: String, givenAlbumUrl: String, givenGense1Id: String, givenGense1Name: String, givenGense2Id: String, givenGense2Name: String, givenCopyright: String ->
-        val dataIn = Pair(
-          AlbumDto(
+      forAll(100) { givenAlbumId: String, givenAlbumName: String, givenArtistName: String, givenReleaseDate: String, givenArtworkUrl: String, givenAlbumUrl: String, givenGense1Id: String, givenGense1Name: String, givenGense2Id: String, givenGense2Name: String, givenCopyright: String, givenCountryCode: String ->
+        val dataIn = AlbumData(
+          album = AlbumDto(
             id = givenAlbumId,
             name = givenAlbumName,
             artistName = givenArtistName,
@@ -29,7 +29,9 @@ class AlbumDtoToAlbumMapperSpec : DescribeSpec() {
               GenreDto(givenGense2Id, givenGense2Name)
             ),
             url = givenAlbumUrl
-          ), givenCopyright
+          ),
+          copyright = givenCopyright,
+          countryCode = givenCountryCode
         )
 
         // When
@@ -52,6 +54,7 @@ class AlbumDtoToAlbumMapperSpec : DescribeSpec() {
             name shouldBe givenGense2Name
           }
           copyright shouldBe givenCopyright
+          countryCode shouldBe givenCountryCode
         }
 
         true

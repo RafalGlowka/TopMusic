@@ -1,18 +1,18 @@
 package com.glowka.rafal.topmusic.domain.service
 
 import android.view.View
+import com.glowka.rafal.topmusic.domain.architecture.TextResource
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
 class FakeSnackBarService : SnackBarService {
-
   data class SnakbarEvent(
-    val message: String,
+    val message: TextResource,
     val duration: Int,
-    val actionLabel: String,
-    val action: () -> Unit
+    val actionLabel: TextResource?,
+    val action: (() -> Unit)?,
   )
 
   private val _events = MutableSharedFlow<SnakbarEvent>()
@@ -21,10 +21,10 @@ class FakeSnackBarService : SnackBarService {
   override fun attach(rootView: View) {}
 
   override fun showSnackBar(
-    message: String,
+    message: TextResource,
     duration: Int,
-    actionLabel: String,
-    action: () -> Unit
+    actionLabel: TextResource?,
+    action: (() -> Unit)?
   ) {
     MainScope().launch {
       _events.emit(

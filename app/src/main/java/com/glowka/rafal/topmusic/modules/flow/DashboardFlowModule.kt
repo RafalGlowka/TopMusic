@@ -18,6 +18,7 @@ val dashboardFeatureModule = module {
   ) {
     screen(screen = DashboardFlow.Screens.List)
     screen(screen = DashboardFlow.Screens.Details)
+    screenDialog(screen = DashboardFlow.ScreenDialogs.Country)
   }
 
 }

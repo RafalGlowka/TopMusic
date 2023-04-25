@@ -1,5 +1,7 @@
 package com.glowka.rafal.topmusic.data.dso
 
+import com.glowka.rafal.topmusic.domain.model.Country
+
 fun albumDso(
   id: String = "1",
   name: String = "Karoce",
@@ -8,7 +10,8 @@ fun albumDso(
   artworkUrl: String = "https://secret.music.com/Karoce.jpg",
   genres: List<GenreDso> = listOf(genreDso()),
   url: String = "http://https://secret.music.com/Karoce",
-  copyright: String = "Nowak - All rights reserved"
+  copyright: String = "Nowak - All rights reserved",
+  countryCode: String = Country.UnitedStates.countryCode,
 ) = AlbumDso(
   id = id,
   name = artistName,
@@ -18,4 +21,5 @@ fun albumDso(
   genres = genres,
   url = url,
   copyright = copyright,
+  countryCode = countryCode,
 )

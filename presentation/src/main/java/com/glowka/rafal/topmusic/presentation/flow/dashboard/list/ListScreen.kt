@@ -38,7 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.glowka.rafal.topmusic.domain.model.Album
+import com.glowka.rafal.topmusic.domain.model.Genre
 import com.glowka.rafal.topmusic.presentation.R
+import com.glowka.rafal.topmusic.presentation.architecture.compose.asString
+import com.glowka.rafal.topmusic.presentation.model.nameResId
 import com.glowka.rafal.topmusic.presentation.style.Colors
 import com.glowka.rafal.topmusic.presentation.style.FontSize
 import com.glowka.rafal.topmusic.presentation.style.Fonts
@@ -82,13 +85,17 @@ internal fun ListScreen(
           ) {
             header {
               Text(
-                modifier = Modifier.padding(
-                  top = Margin.m4 + statusBarHeight,
-                  bottom = Margin.m4,
-                  start = Margin.m4,
-                  end = Margin.m4,
-                ),
-                text = stringResource(id = R.string.list_title),
+                modifier = Modifier
+                  .padding(
+                    top = Margin.m4 + statusBarHeight,
+                    bottom = Margin.m4,
+                    start = Margin.m4,
+                    end = Margin.m4,
+                  )
+                  .clickable {
+                    onViewEvent(ListViewModelToViewInterface.ViewEvents.PickCountry)
+                  },
+                text = stringResource(id = R.string.list_title, stringResource(id = viewState.country.nameResId())),
                 color = Colors.dark,
                 fontFamily = Fonts.Bold,
                 fontSize = FontSize.title
@@ -121,8 +128,11 @@ internal fun ListScreen(
                     start = Margin.m3,
                     end = Margin.m3,
                   )
+                  .clickable {
+                    onViewEvent(ListViewModelToViewInterface.ViewEvents.PickCountry)
+                  }
                   .fillMaxWidth(),
-                text = stringResource(id = R.string.list_title),
+                text = stringResource(id = R.string.list_title, stringResource(id = viewState.country.nameResId())),
                 color = Colors.dark,
                 fontFamily = Fonts.Bold,
                 textAlign = TextAlign.Center,
@@ -164,7 +174,7 @@ private fun AlbumListItem(
         .aspectRatio(1f)
     ) {
       GlideImage(
-        imageModel = { album.artworkUrl100 } ,
+        imageModel = { album.artworkUrl100 },
         loading = {
           Box(
             modifier = Modifier
@@ -239,7 +249,17 @@ private fun LazyGridScope.header(
 @Composable
 private fun AlbumListItemPreview() {
   AlbumListItem(
-    album = Album(),
+    album = Album(
+      id = "123",
+      name = "Super Jazz",
+      artistName = "Artist",
+      releaseDate = "2022.03.18",
+      artworkUrl100 = "www.wp.pl",
+      genres = listOf(Genre(id = "123", name = "Jazz")),
+      copyright = "some copyright",
+      url = "www.wp.pl",
+      countryCode = "us",
+    ),
     onAlbumClick = {}
   )
 }

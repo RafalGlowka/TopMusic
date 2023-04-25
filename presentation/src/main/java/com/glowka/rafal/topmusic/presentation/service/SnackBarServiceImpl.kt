@@ -1,8 +1,10 @@
 package com.glowka.rafal.topmusic.presentation.service
 
 import android.view.View
+import com.glowka.rafal.topmusic.domain.architecture.TextResource
 import com.glowka.rafal.topmusic.domain.service.SnackBarService
 import com.glowka.rafal.topmusic.domain.utils.logE
+import com.glowka.rafal.topmusic.presentation.architecture.compose.asString
 import com.google.android.material.snackbar.Snackbar
 
 class SnackBarServiceImpl() : SnackBarService {
@@ -13,16 +15,18 @@ class SnackBarServiceImpl() : SnackBarService {
   }
 
   override fun showSnackBar(
-    message: String,
+    message: TextResource,
     duration: Int,
-    actionLabel: String,
-    action: () -> Unit
+    actionLabel: TextResource?,
+    action: (() -> Unit)?,
   ) {
     rootView?.let { rootView ->
-      val snackBar = Snackbar.make(rootView, message, duration)
-      snackBar.setAction(actionLabel) {
-        action()
-        snackBar.dismiss()
+      val snackBar = Snackbar.make(rootView, message.asString(rootView.resources), duration)
+      if (actionLabel != null && action != null) {
+        snackBar.setAction(actionLabel.asString(rootView.resources)) {
+          action()
+          snackBar.dismiss()
+        }
       }
       snackBar.show()
     } ?: logE("Missing rootView")

@@ -38,7 +38,7 @@ val musicModule = module {
       albumDtoToAlbumMapper = get(),
       albumDsoToAlbumMapper = get(),
       albumToAlbumDsoMapper = get(),
-      albumDatabase = get(),
+      musicDatabase = get(),
     )
   }
 

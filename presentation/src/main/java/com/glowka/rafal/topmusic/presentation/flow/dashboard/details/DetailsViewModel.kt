@@ -8,10 +8,9 @@ import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterf
 import com.glowka.rafal.topmusic.presentation.architecture.launch
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Event
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Param
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewState
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewEvents
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewState
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
 
 interface DetailsViewModelToFlowInterface : ViewModelToFlowInterface<Param, Event> {
   data class Param(val album: Album)
@@ -37,14 +36,15 @@ class DetailsViewModelImpl : DetailsViewModelToViewInterface, DetailsViewModelTo
     backPressedEvent = Event.Back
   ) {
 
-  override val viewState = MutableStateFlow(ViewState(Album()))
+  override lateinit var viewState: MutableStateFlow<ViewState>
 
   lateinit var param: Param
 
   override fun init(param: Param) {
     this.param = param
 
-    viewState.update { state -> state.copy(album = param.album) }
+    viewState = MutableStateFlow(ViewState(param.album))
+//    viewState.update { state -> state.copy(album = param.album) }
   }
 
   override fun onViewEvent(event: ViewEvents) {

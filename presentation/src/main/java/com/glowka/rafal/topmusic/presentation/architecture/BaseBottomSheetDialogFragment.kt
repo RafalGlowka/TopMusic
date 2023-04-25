@@ -7,17 +7,13 @@ import android.view.ViewGroup
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.fragment.app.DialogFragment
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 
-interface ScreenDialogFragment<VIEW_STATE : Any,
-    VIEW_EVENT : Any,
-    VIEW_MODEL : ViewModelToViewInterface<VIEW_STATE, VIEW_EVENT>> {}
-
-abstract class BaseDialogFragment<
+abstract class BaseBottomSheetDialogFragment<
     VIEW_STATE : Any,
     VIEW_EVENT : Any,
     VIEW_MODEL : ViewModelToViewInterface<VIEW_STATE, VIEW_EVENT>> :
-  ScreenDialogFragment<VIEW_STATE, VIEW_EVENT, VIEW_MODEL>, DialogFragment() {
+  ScreenDialogFragment<VIEW_STATE, VIEW_EVENT, VIEW_MODEL>, BottomSheetDialogFragment() {
   protected val viewModel: VIEW_MODEL by injectViewModel()
 
   final override fun onCreateView(

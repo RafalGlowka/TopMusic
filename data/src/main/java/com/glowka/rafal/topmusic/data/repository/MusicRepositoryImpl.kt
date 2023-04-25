@@ -1,75 +1,101 @@
 package com.glowka.rafal.topmusic.data.repository
 
-import com.glowka.rafal.topmusic.data.api.Country
 import com.glowka.rafal.topmusic.data.api.ListApi
-import com.glowka.rafal.topmusic.data.database.AlbumDatabase
+import com.glowka.rafal.topmusic.data.api.makeApiCall
+import com.glowka.rafal.topmusic.data.database.ConfigKeys
+import com.glowka.rafal.topmusic.data.database.MusicDatabase
+import com.glowka.rafal.topmusic.data.mapper.AlbumData
 import com.glowka.rafal.topmusic.data.mapper.AlbumDsoToAlbumMapper
 import com.glowka.rafal.topmusic.data.mapper.AlbumDtoToAlbumMapper
 import com.glowka.rafal.topmusic.data.mapper.AlbumToAlbumDsoMapper
 import com.glowka.rafal.topmusic.domain.model.Album
+import com.glowka.rafal.topmusic.domain.model.Country
 import com.glowka.rafal.topmusic.domain.repository.MusicRepository
-import com.glowka.rafal.topmusic.domain.usecase.UseCaseResult
 import com.glowka.rafal.topmusic.domain.utils.EMPTY
+import com.glowka.rafal.topmusic.domain.utils.logD
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.flatMapConcat
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
 class MusicRepositoryImpl(
   val listApi: ListApi,
   val albumDtoToAlbumMapper: AlbumDtoToAlbumMapper,
   val albumDsoToAlbumMapper: AlbumDsoToAlbumMapper,
   val albumToAlbumDsoMapper: AlbumToAlbumDsoMapper,
-  val albumDatabase: AlbumDatabase,
+  val musicDatabase: MusicDatabase,
 ) : MusicRepository {
 
+  override val country = MutableStateFlow(Country.UnitedStates)
   override val albums = MutableStateFlow<List<Album>>(emptyList())
 
-  override fun init(): Flow<UseCaseResult<Boolean>> =
-    getAlbumsFromLocalStore().map { result -> UseCaseResult.Success(result) }
+  override suspend fun initWithLocalStorage(): Result<Boolean> {
+    return Result.success(withContext(Dispatchers.IO) {
+      val pickedCountry = getCountryFromLocalStorage()
+      country.emit(pickedCountry)
+      getAlbumsFromLocalStore(pickedCountry)
+    })
+  }
 
-  override fun reloadFromBackend(): Flow<UseCaseResult<List<Album>>> =
-    flow<UseCaseResult<List<Album>>> {
-//      logD("making data call")
-      val data = listApi.getAlbums(countryCode = Country.UnitedStates.countryCode)
-//      logD("data: $data")
-      val copyright = data.feed?.copyright ?: String.EMPTY
-      val newList = data.feed?.results?.map { albumDto ->
-        albumDtoToAlbumMapper(albumDto to copyright)
-      }
-      emit(UseCaseResult.Success(newList?.filterNotNull() ?: emptyList()))
-    }.catch { throwable ->
-//      logE("refreshFromServer error:", throwable)
-      emit(UseCaseResult.Error(message = throwable.message ?: "Parser error"))
-    }.flatMapConcat { result ->
-      if (result is UseCaseResult.Success<List<Album>> && result.data.isNotEmpty()) {
-        albums.emit(result.data)
-        saveAlbumsToLocalStore(result.data).map { result }
-      } else {
-        flowOf(result)
+  override suspend fun changeCountryWithLocalStorage(country: Country): Result<Boolean> {
+    return Result.success(
+      withContext(Dispatchers.IO) {
+        this@MusicRepositoryImpl.country.emit(country)
+        getAlbumsFromLocalStore(country)
+      })
+  }
+
+  override suspend fun reloadFromBackend(): Result<List<Album>> {
+
+    val countryCode = country.value.countryCode
+    return makeApiCall {
+      val response = listApi.getAlbums(countryCode = countryCode)
+      val copyright = response.feed?.copyright ?: String.EMPTY
+      response.feed?.results?.mapNotNull { albumDto ->
+        val albumData = albumDto?.let { albumDto ->
+          AlbumData(album = albumDto, countryCode = countryCode, copyright = copyright)
+        }
+        albumDtoToAlbumMapper(albumData)
+      } ?: emptyList()
+    }.onSuccess { newList ->
+      albums.emit(newList)
+      withContext(Dispatchers.IO) {
+        saveAlbumsToLocalStore(newList)
       }
     }
+  }
 
-  private fun getAlbumsFromLocalStore(): Flow<Boolean> = flow {
-    val list = albumDatabase.albumDao().getAll().map { albumDso ->
-      albumDsoToAlbumMapper(albumDso)
+  private fun getCountryFromLocalStorage(): Country {
+    val country = musicDatabase.configDao()
+      .getAll(ConfigKeys.COUNTRY_CODE)
+      .firstNotNullOfOrNull { config ->
+        Country.values()
+          .firstOrNull { country -> country.countryCode == config.value }
+      }
+    return country ?: Country.UnitedStates
+  }
+
+  private suspend fun getAlbumsFromLocalStore(country: Country): Boolean {
+    val list = musicDatabase.albumDao().getAllWithCountryCode(countryCode = country.countryCode)
+      .map { albumDso ->
+        albumDsoToAlbumMapper(albumDso)
+      }
+    logD("load local storage for $country : $list")
+    if (list.isNotEmpty()) {
+      albums.emit(list)
     }
-    albums.emit(list)
-    emit(list.isNotEmpty())
-  }.flowOn(Dispatchers.IO)
+    return list.isNotEmpty()
+  }
 
-  private fun saveAlbumsToLocalStore(list: List<Album>): Flow<Boolean> = flow {
-    albumDatabase.albumDao().apply {
-      deleteAll()
+  private fun saveAlbumsToLocalStore(list: List<Album>): Boolean {
+    musicDatabase.albumDao().apply {
+      list.firstOrNull()?.run {
+        deleteAlbumsWithCountryCode(countryCode)
+      }
       insertAll(*(list.map { album ->
         albumToAlbumDsoMapper(album)
       }.toTypedArray()))
     }
-    emit(true)
-  }.flowOn(Dispatchers.IO)
+    return true
+  }
+
 }

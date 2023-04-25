@@ -9,6 +9,7 @@ The purpose of this application is to show usage of some basic libraries and arc
 * coroutines, flows
 * Retrofit2
 * Lottie
+* Kotest, Mockk
 
 ## Screen shots
 |                    Splash                    |                Splash with connection error                |
@@ -32,10 +33,7 @@ The purpose of this application is to show usage of some basic libraries and arc
 ![Video from testing](video/Testing.mp4)
 
 Further development should be focused on:
-* androidTests - Testing fragments and emitting ViewEvents
 * Support edge cases of Activity <--> System interaction
 * Support for animations and transitions
-* Testing business flows. 
-* Move snackBars/toasts? to composer.
 
 

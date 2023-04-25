@@ -22,4 +22,6 @@ data class AlbumDso(
   val copyright: String,
   @ColumnInfo(name = "url")
   val url: String,
+  @ColumnInfo(name = "country")
+  val countryCode: String
 )

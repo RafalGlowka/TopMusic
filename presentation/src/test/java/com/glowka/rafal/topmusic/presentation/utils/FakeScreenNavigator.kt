@@ -219,6 +219,16 @@ fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterf
   return this
 }
 
+fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
+    SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBeHideScreenDialog(
+  screenDialog: SCREENDIALOG,
+) {
+  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.HideScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG>>()
+    .run {
+      this.screenDialog shouldBe screenDialog
+    }
+}
+
 fun NavigationEvent.shouldBeStartActivity() {
   this.shouldBeTypeOf<NavigationEvent.ActivityNavigationEvent.StartActivity>()
 }

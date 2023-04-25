@@ -9,6 +9,7 @@ object ListScreenStructure : ScreenStructure<EmptyParam, ListViewModelToFlowInte
   override val fragmentClass = ListFragment::class
   override fun Scope.viewModelCreator() = ListViewModelImpl(
     musicRepository = get(),
+    snackBarService = get(),
   )
 
 }

@@ -1,6 +1,6 @@
 package com.glowka.rafal.topmusic.modules
 
-import com.glowka.rafal.topmusic.data.database.AlbumDataBaseBuilder
+import com.glowka.rafal.topmusic.data.database.MusicDataBaseBuilder
 import com.glowka.rafal.topmusic.data.remote.JSONSerializer
 import com.glowka.rafal.topmusic.data.remote.JSONSerializerImpl
 import com.glowka.rafal.topmusic.data.remote.OKHttpClientBuilder
@@ -23,7 +23,7 @@ val dataModule = module {
   }
 
   single {
-    AlbumDataBaseBuilder.create(androidContext())
+    MusicDataBaseBuilder.create(androidContext())
   }
 
 }

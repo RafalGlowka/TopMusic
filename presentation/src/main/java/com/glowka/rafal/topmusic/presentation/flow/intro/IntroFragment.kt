@@ -11,4 +11,9 @@ class IntroFragment : BaseFragment<State, ViewEvents, IntroViewModelToViewInterf
     IntroScreen()
   }
 
+  override fun onResume() {
+    super.onResume()
+    viewModel.onViewEvent(ViewEvents.ActiveScreen)
+  }
+
 }

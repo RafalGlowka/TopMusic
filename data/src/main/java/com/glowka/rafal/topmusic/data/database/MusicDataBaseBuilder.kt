@@ -3,9 +3,9 @@ package com.glowka.rafal.topmusic.data.database
 import android.content.Context
 import androidx.room.Room
 
-object AlbumDataBaseBuilder {
+object MusicDataBaseBuilder {
   fun create(applicationContext: Context) = Room.databaseBuilder(
     applicationContext,
-    AlbumDatabase::class.java, "albumDB"
+    MusicDatabase::class.java, "musicDB"
   ).build()
 }

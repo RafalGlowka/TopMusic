@@ -9,6 +9,7 @@ fun album(
   genres: List<Genre> = emptyList(),
   copyright: String = "Some copyright frazes",
   url: String = "https:/supermusic.com/album",
+  countryCode: String = Country.UnitedStates.countryCode,
 ) = Album(
   id = id,
   artistName = artistName,
@@ -18,4 +19,5 @@ fun album(
   genres = genres,
   copyright = copyright,
   url = url,
+  countryCode = countryCode,
 )

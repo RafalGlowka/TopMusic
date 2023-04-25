@@ -15,6 +15,9 @@ fun BaseFragment<*, *, *>.getScreenTag() = arguments?.getString(BaseFragment.ARG
 fun BaseDialogFragment<*, *, *>.getScopeName() = arguments?.getString(BaseDialogFragment.ARG_SCOPE)
 fun BaseDialogFragment<*, *, *>.getScreenTag() =
   arguments?.getString(BaseDialogFragment.ARG_SCREEN_TAG)
+fun BaseBottomSheetDialogFragment<*, *, *>.getScopeName() = arguments?.getString(BaseDialogFragment.ARG_SCOPE)
+fun BaseBottomSheetDialogFragment<*, *, *>.getScreenTag() =
+  arguments?.getString(BaseDialogFragment.ARG_SCREEN_TAG)
 
 fun <VMSTATE : Any, VEVENTS : Any, VM : ViewModelToViewInterface<VMSTATE, VEVENTS>>
     BaseFragment<VMSTATE, VEVENTS, VM>.injectViewModel(): Lazy<VM> {
@@ -47,6 +50,35 @@ fun <VMSTATE : Any, VEVENTS : Any, VM : ViewModelToViewInterface<VMSTATE, VEVENT
 
 fun <VMSTATE : Any, VEVENTS : Any, VM : ViewModelToViewInterface<VMSTATE, VEVENTS>>
     BaseDialogFragment<VMSTATE, VEVENTS, VM>.injectViewModel(): Lazy<VM> {
+  return lazy(LazyThreadSafetyMode.NONE) {
+    val scopeName =
+      getScopeName() ?: throw IllegalArgumentException("Missing scopeName for ${this::logTag}")
+    val screenTag =
+      getScreenTag() ?: throw IllegalArgumentException("Missing screenTag for ${this::logTag}")
+    val scope = getKoin().getScopeOrNull(scopeName)
+      ?: throw RuntimeException("Missing scope $scopeName definition in Di")
+    val qualifier = StringQualifier(screenTag)
+
+    val viewModel = try {
+      scope.get(
+        clazz = BaseViewModel::class,
+        qualifier = qualifier,
+        parameters = null
+      ) as? BaseViewModel<*, *, *, *>
+        ?: throw TypeCastException("Incorrect ViewModel base type")
+    } catch (error: NoBeanDefFoundException) {
+      throw java.lang.RuntimeException("Missing viewModel for screen $screenTag in scope $scopeName")
+    }
+
+//    viewModel.lifecycleOwner = this
+
+    @Suppress("UNCHECKED_CAST")
+    return@lazy viewModel as? VM ?: throw TypeCastException("Incorrect ViewModel type")
+  }
+}
+
+fun <VMSTATE : Any, VEVENTS : Any, VM : ViewModelToViewInterface<VMSTATE, VEVENTS>>
+    BaseBottomSheetDialogFragment<VMSTATE, VEVENTS, VM>.injectViewModel(): Lazy<VM> {
   return lazy(LazyThreadSafetyMode.NONE) {
     val scopeName =
       getScopeName() ?: throw IllegalArgumentException("Missing scopeName for ${this::logTag}")

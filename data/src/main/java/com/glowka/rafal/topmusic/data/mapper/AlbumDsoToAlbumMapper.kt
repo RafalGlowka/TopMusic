@@ -24,6 +24,7 @@ class AlbumDsoToAlbumMapperImpl() : AlbumDsoToAlbumMapper {
    },
    copyright = data.copyright,
    url = data.url,
+   countryCode = data.countryCode
   )
  }
 
