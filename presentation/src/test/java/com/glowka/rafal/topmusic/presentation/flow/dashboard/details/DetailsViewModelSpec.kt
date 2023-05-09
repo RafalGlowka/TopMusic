@@ -16,7 +16,7 @@ class DetailsViewModelSpec : ViewModelSpec() {
     describe("initialization") {
 
       it("shows data from album received during initalization") {
-        viewModel.init(DetailsViewModelToFlowInterface.Param(album))
+        viewModel.onInput(DetailsViewModelToFlowInterface.Input.Init(album))
 
         viewModel.viewState.test {
           awaitItem().album shouldBe album
@@ -29,21 +29,21 @@ class DetailsViewModelSpec : ViewModelSpec() {
       it("opens url when action picked") {
         viewModel.testScreenEvents {
           viewModel.onViewEvent(DetailsViewModelToViewInterface.ViewEvents.OpenURL)
-          awaitItem() shouldBe DetailsViewModelToFlowInterface.Event.OpenURL(album.url)
+          awaitItem() shouldBe DetailsViewModelToFlowInterface.Output.OpenURL(album.url)
         }
       }
 
       it("emits BACK event on close event") {
         viewModel.testScreenEvents {
           viewModel.onViewEvent(DetailsViewModelToViewInterface.ViewEvents.Close)
-          awaitItem() shouldBe DetailsViewModelToFlowInterface.Event.Back
+          awaitItem() shouldBe DetailsViewModelToFlowInterface.Output.Back
         }
       }
 
       it("emits BACK event if system back action was called") {
         viewModel.testScreenEvents {
           viewModel.onBackPressed()
-          awaitItem() shouldBe DetailsViewModelToFlowInterface.Event.Back
+          awaitItem() shouldBe DetailsViewModelToFlowInterface.Output.Back
         }
       }
     }

@@ -2,21 +2,26 @@ package com.glowka.rafal.topmusic.presentation.flow.dashboard.details
 
 import com.glowka.rafal.topmusic.domain.model.Album
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterface
 import com.glowka.rafal.topmusic.presentation.architecture.launch
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Event
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Param
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Input
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface.Output
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewEvents
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToViewInterface.ViewState
 import kotlinx.coroutines.flow.MutableStateFlow
 
-interface DetailsViewModelToFlowInterface : ViewModelToFlowInterface<Param, Event> {
-  data class Param(val album: Album)
-  sealed class Event : ScreenEvent {
-    object Back : Event()
-    data class OpenURL(var url: String) : Event()
+interface DetailsViewModelToFlowInterface : ViewModelToFlowInterface<Input, Output> {
+
+  sealed interface Input : ScreenInput {
+    data class Init(val album: Album) : Input
+  }
+
+  sealed interface Output : ScreenOutput {
+    object Back : Output
+    data class OpenURL(var url: String) : Output
   }
 }
 
@@ -32,31 +37,34 @@ interface DetailsViewModelToViewInterface : ViewModelToViewInterface<ViewState, 
 }
 
 class DetailsViewModelImpl : DetailsViewModelToViewInterface, DetailsViewModelToFlowInterface,
-  BaseViewModel<Param, Event, ViewState, ViewEvents>(
-    backPressedEvent = Event.Back
+  BaseViewModel<Input, Output, ViewState, ViewEvents>(
+    backPressedOutput = Output.Back
   ) {
 
   override lateinit var viewState: MutableStateFlow<ViewState>
 
-  lateinit var param: Param
+  lateinit var album: Album
 
-  override fun init(param: Param) {
-    this.param = param
-
-    viewState = MutableStateFlow(ViewState(param.album))
-//    viewState.update { state -> state.copy(album = param.album) }
+  override fun onInput(input: Input) {
+    when (input) {
+      is Input.Init -> {
+        this.album = input.album
+        viewState = MutableStateFlow(ViewState(album))
+      }
+    }
   }
 
   override fun onViewEvent(event: ViewEvents) {
     when (event) {
       ViewEvents.Close -> {
         launch {
-          sendEvent(event = Event.Back)
+          sendOutput(output = Output.Back)
         }
       }
+
       ViewEvents.OpenURL -> {
         launch {
-          sendEvent(event = Event.OpenURL(param.album.url))
+          sendOutput(output = Output.OpenURL(album.url))
         }
       }
     }

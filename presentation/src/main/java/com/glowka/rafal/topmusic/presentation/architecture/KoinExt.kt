@@ -9,13 +9,15 @@ import org.koin.core.qualifier.named
 import org.koin.dsl.ScopeDSL
 import org.koin.dsl.binds
 
-
 fun BaseFragment<*, *, *>.getScopeName() = arguments?.getString(BaseFragment.ARG_SCOPE)
 fun BaseFragment<*, *, *>.getScreenTag() = arguments?.getString(BaseFragment.ARG_SCREEN_TAG)
 fun BaseDialogFragment<*, *, *>.getScopeName() = arguments?.getString(BaseDialogFragment.ARG_SCOPE)
 fun BaseDialogFragment<*, *, *>.getScreenTag() =
   arguments?.getString(BaseDialogFragment.ARG_SCREEN_TAG)
-fun BaseBottomSheetDialogFragment<*, *, *>.getScopeName() = arguments?.getString(BaseDialogFragment.ARG_SCOPE)
+
+fun BaseBottomSheetDialogFragment<*, *, *>.getScopeName() =
+  arguments?.getString(BaseDialogFragment.ARG_SCOPE)
+
 fun BaseBottomSheetDialogFragment<*, *, *>.getScreenTag() =
   arguments?.getString(BaseDialogFragment.ARG_SCREEN_TAG)
 
@@ -107,10 +109,9 @@ fun <VMSTATE : Any, VEVENTS : Any, VM : ViewModelToViewInterface<VMSTATE, VEVENT
 }
 
 
-fun <PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScopeDSL.screenViewModel(
-  screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-  definition: Definition<ViewModelInterface<PARAM, EVENT, *, *>>
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> ScopeDSL.screenViewModel(
+  screen: Screen<INPUT, OUTPUT>,
+  definition: Definition<ViewModelInterface<INPUT, OUTPUT, *, *>>
 ) {
   scoped(
     qualifier = named(screen.screenTag),
@@ -118,9 +119,8 @@ fun <PARAM : Any, EVENT : ScreenEvent,
   ) binds arrayOf(ViewModelToFlowInterface::class, BaseViewModel::class)
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScopeDSL.screen(
-  screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> ScopeDSL.screen(
+  screen: Screen<INPUT, OUTPUT>
 ) {
   scoped(
     qualifier = named(screen.screenTag),
@@ -131,9 +131,8 @@ fun <PARAM : Any, EVENT : ScreenEvent,
     }) binds arrayOf(ViewModelToFlowInterface::class, BaseViewModel::class)
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> ScopeDSL.screenDialog(
-  screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> ScopeDSL.screenDialog(
+  screen: ScreenDialog<INPUT, OUTPUT>
 ) {
   scoped(
     qualifier = named(screen.screenTag),

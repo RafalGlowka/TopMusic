@@ -1,4 +1,5 @@
 @file:Suppress("MaxLineLength")
+
 package com.glowka.rafal.topmusic.presentation.utils
 
 import android.content.Intent
@@ -6,9 +7,9 @@ import com.glowka.rafal.topmusic.domain.utils.pop
 import com.glowka.rafal.topmusic.domain.utils.push
 import com.glowka.rafal.topmusic.presentation.architecture.Screen
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenDialog
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenNavigator
-import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeTypeOf
 import kotlinx.coroutines.MainScope
@@ -21,44 +22,39 @@ sealed interface NavigationEvent {
   sealed interface ScreenNavigationEvent : NavigationEvent {
 
     data class ShowScreen<
-        PARAM : Any,
-        EVENT : ScreenEvent,
-        VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-        SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>
+        INPUT : ScreenInput,
+        OUTPUT : ScreenOutput,
+        SCREEN : Screen<INPUT, OUTPUT>
         >(
       val screen: SCREEN,
-      val param: PARAM,
-      val onEvent: (EVENT) -> Unit,
+      val onShowInput: INPUT?,
+      val onOutput: (OUTPUT) -> Unit,
     ) : ScreenNavigationEvent
 
     data class PopBack<
-        PARAM : Any,
-        EVENT : ScreenEvent,
-        VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-        SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>
+        INPUT : ScreenInput,
+        OUTPUT : ScreenOutput,
+        SCREEN : Screen<INPUT, OUTPUT>
         >(val screen: SCREEN) : ScreenNavigationEvent
 
     data class PopBackTo<
-        PARAM : Any,
-        EVENT : ScreenEvent,
-        VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-        SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>
+        INPUT : ScreenInput,
+        OUTPUT : ScreenOutput,
+        SCREEN : Screen<INPUT, OUTPUT>
         >(val screen: SCREEN) : ScreenNavigationEvent
   }
 
   sealed interface ScreenDialogNavigationEvent : NavigationEvent {
-    data class ShowScreenDialog<PARAM : Any, EVENT : ScreenEvent,
-        VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-        SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>>(
+    data class ShowScreenDialog<INPUT : ScreenInput, OUTPUT : ScreenOutput,
+        SCREENDIALOG : ScreenDialog<INPUT, OUTPUT>>(
+
       val screenDialog: SCREENDIALOG,
-      val param: PARAM,
-      val onEvent: (EVENT) -> Unit,
+      val onShowInput: INPUT?,
+      val onOutput: (OUTPUT) -> Unit,
     ) : ScreenDialogNavigationEvent
 
-    data class HideScreenDialog<
-        PARAM : Any, EVENT : ScreenEvent,
-        VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-        SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>>(
+    data class HideScreenDialog<INPUT : ScreenInput, OUTPUT : ScreenOutput,
+        SCREENDIALOG : ScreenDialog<INPUT, OUTPUT>>(
       val screenDialog: SCREENDIALOG
     ) : ScreenDialogNavigationEvent
   }
@@ -76,22 +72,22 @@ class FakeScreenNavigator : ScreenNavigator {
   private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
   val navigationEvents: SharedFlow<NavigationEvent> = _navigationEvents
 
-  val screenStack = arrayListOf<Screen<*, *, *>>()
+  val screenStack = arrayListOf<Screen<*, *>>()
 
-  override fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> push(
+  override fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> push(
     scope: Scope,
-    screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-    param: PARAM,
-    onEvent: (EVENT) -> Unit
+    screen: Screen<INPUT, OUTPUT>,
+    onShowInput: INPUT?,
+    onOutput: (OUTPUT) -> Unit
   ) {
     screenStack.push(screen)
-    val event = NavigationEvent.ScreenNavigationEvent.ShowScreen(screen, param, onEvent)
+    val event = NavigationEvent.ScreenNavigationEvent.ShowScreen(screen, onShowInput, onOutput)
     MainScope().launch {
       _navigationEvents.emit(event)
     }
   }
 
-  override fun popBack(screen: Screen<*, *, *>) {
+  override fun popBack(screen: Screen<*, *>) {
     if (screenStack.isNotEmpty()) {
       for (i in screenStack.size - 1 downTo 0) {
         if (screenStack[i] == screen) {
@@ -106,7 +102,7 @@ class FakeScreenNavigator : ScreenNavigator {
     }
   }
 
-  override fun popBackTo(screen: Screen<*, *, *>) {
+  override fun popBackTo(screen: Screen<*, *>) {
     if (screenStack.isNotEmpty()) {
       for (i in screenStack.size - 1 downTo 0) {
         if (screenStack[i] == screen) {
@@ -122,20 +118,20 @@ class FakeScreenNavigator : ScreenNavigator {
   }
 
   @Suppress("MaxLineLength")
-  override fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> showDialog(
+  override fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> showDialog(
     scope: Scope,
-    screenDialog: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-    param: PARAM,
-    onEvent: (EVENT) -> Unit
+    screenDialog: ScreenDialog<INPUT, OUTPUT>,
+    onShowInput: INPUT?,
+    onOutput: (OUTPUT) -> Unit
   ) {
     val scd =
-      NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog(screenDialog, param, onEvent)
+      NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog(screenDialog, onShowInput, onOutput)
     MainScope().launch {
       _navigationEvents.emit(scd)
     }
   }
 
-  override fun hideDialog(screenDialog: ScreenDialog<*, *, *>) {
+  override fun hideDialog(screenDialog: ScreenDialog<*, *>) {
     val scd = NavigationEvent.ScreenDialogNavigationEvent.HideScreenDialog(screenDialog)
     MainScope().launch {
       _navigationEvents.emit(scd)
@@ -155,75 +151,75 @@ class FakeScreenNavigator : ScreenNavigator {
   }
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBeNavigationToScreen(
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREEN : Screen<INPUT, OUTPUT>>
+    NavigationEvent.shouldBeNavigationToScreen(
   screen: SCREEN,
-  param: PARAM,
-): NavigationEvent.ScreenNavigationEvent.ShowScreen<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN> {
-  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.ShowScreen<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN>>()
+  onShowInput: INPUT?,
+): NavigationEvent.ScreenNavigationEvent.ShowScreen<INPUT, OUTPUT, SCREEN> {
+  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.ShowScreen<INPUT, OUTPUT, SCREEN>>()
     .run {
       this.screen shouldBe screen
-      this.param shouldBe param
+      this.onShowInput shouldBe onShowInput
     }
   return this
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.ScreenNavigationEvent.ShowScreen<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN>.emitScreenEvent(
-  event: EVENT
-): NavigationEvent.ScreenNavigationEvent.ShowScreen<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN> {
-  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.ShowScreen<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN>>()
-    .onEvent(event)
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREEN : Screen<INPUT, OUTPUT>>
+    NavigationEvent.ScreenNavigationEvent.ShowScreen<INPUT, OUTPUT, SCREEN>.emitScreenOutput(
+  output: OUTPUT
+): NavigationEvent.ScreenNavigationEvent.ShowScreen<INPUT, OUTPUT, SCREEN> {
+  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.ShowScreen<INPUT, OUTPUT, SCREEN>>()
+    .onOutput(output)
   return this
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBePopBack(
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREEN : Screen<INPUT, OUTPUT>>
+    NavigationEvent.shouldBePopBack(
   screen: SCREEN,
 ) {
-  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.PopBack<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN>>()
+  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.PopBack<INPUT, OUTPUT, SCREEN>>()
     .run {
       this.screen shouldBe screen
     }
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREEN : Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBePopBackTo(
-  screen: SCREEN,
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREEN : Screen<INPUT, OUTPUT>>
+    NavigationEvent.shouldBePopBackTo(
+  screen: SCREEN
 ) {
-  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.PopBackTo<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREEN>>()
+  this.shouldBeTypeOf<NavigationEvent.ScreenNavigationEvent.PopBackTo<INPUT, OUTPUT, SCREEN>>()
     .run {
       this.screen shouldBe screen
     }
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBeNavigationToScreenDialog(
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREENDIALOG : ScreenDialog<INPUT, OUTPUT>>
+    NavigationEvent.shouldBeNavigationToScreenDialog(
   screenDialog: SCREENDIALOG,
-  param: PARAM,
-): NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG> {
-  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG>>()
+  param: INPUT,
+): NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<INPUT, OUTPUT, SCREENDIALOG> {
+  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<INPUT, OUTPUT, SCREENDIALOG>>()
     .run {
       this.screenDialog shouldBe screenDialog
-      this.param shouldBe param
+      this.onShowInput shouldBe param
     }
   return this
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG>.emitScreenDialogEvent(
-  event: EVENT
-): NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG> {
-  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG>>()
-    .onEvent(event)
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREENDIALOG : ScreenDialog<INPUT, OUTPUT>>
+    NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<INPUT, OUTPUT, SCREENDIALOG>.emitScreenDialogOutput(
+  output: OUTPUT,
+): NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<INPUT, OUTPUT, SCREENDIALOG> {
+  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.ShowScreenDialog<INPUT, OUTPUT, SCREENDIALOG>>()
+    .onOutput(output)
   return this
 }
 
-fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>,
-    SCREENDIALOG : ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>> NavigationEvent.shouldBeHideScreenDialog(
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput, SCREENDIALOG : ScreenDialog<INPUT, OUTPUT>>
+    NavigationEvent.shouldBeHideScreenDialog(
   screenDialog: SCREENDIALOG,
 ) {
-  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.HideScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW, SCREENDIALOG>>()
+  this.shouldBeTypeOf<NavigationEvent.ScreenDialogNavigationEvent.HideScreenDialog<INPUT, OUTPUT, SCREENDIALOG>>()
     .run {
       this.screenDialog shouldBe screenDialog
     }

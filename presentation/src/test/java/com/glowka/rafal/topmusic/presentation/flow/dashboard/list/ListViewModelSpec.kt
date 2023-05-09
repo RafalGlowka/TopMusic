@@ -6,7 +6,6 @@ import com.glowka.rafal.topmusic.domain.model.Country
 import com.glowka.rafal.topmusic.domain.model.album
 import com.glowka.rafal.topmusic.domain.repository.FakeMusicRepository
 import com.glowka.rafal.topmusic.domain.service.FakeSnackBarService
-import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.presentation.ViewModelSpec
 import com.glowka.rafal.topmusic.presentation.utils.testScreenEvents
 import com.google.android.material.snackbar.Snackbar
@@ -40,7 +39,7 @@ class ListViewModelSpec : ViewModelSpec() {
           musicRepository.reloadFromBackend()
           expectNoEvents()
 
-          viewModel.init(EmptyParam.EMPTY)
+          viewModel.onInput(ListViewModelToFlowInterface.Input.Init)
 
           awaitItem().items shouldBe listOf(album)
         }
@@ -54,7 +53,7 @@ class ListViewModelSpec : ViewModelSpec() {
           musicRepository.changeCountryWithLocalStorage(Country.Poland)
           expectNoEvents()
 
-          viewModel.init(EmptyParam.EMPTY)
+          viewModel.onInput(ListViewModelToFlowInterface.Input.Init)
           awaitItem() // first update is after subscription of albums
           awaitItem().country shouldBe Country.Poland
         }
@@ -109,21 +108,21 @@ class ListViewModelSpec : ViewModelSpec() {
         val album4 = album(id = "4")
         viewModel.testScreenEvents {
           viewModel.onViewEvent(ListViewModelToViewInterface.ViewEvents.PickedAlbum(album4))
-          awaitItem() shouldBe ListViewModelToFlowInterface.Event.ShowDetails(album4)
+          awaitItem() shouldBe ListViewModelToFlowInterface.Output.ShowDetails(album4)
         }
       }
 
       it("emits Back event when system back action is called") {
         viewModel.testScreenEvents {
           viewModel.onBackPressed()
-          awaitItem() shouldBe ListViewModelToFlowInterface.Event.Back
+          awaitItem() shouldBe ListViewModelToFlowInterface.Output.Back
         }
       }
 
       it("emits pick country when pick country action was clicked") {
         viewModel.testScreenEvents {
           viewModel.onViewEvent(ListViewModelToViewInterface.ViewEvents.PickCountry)
-          awaitItem() shouldBe ListViewModelToFlowInterface.Event.ChangeCountry(
+          awaitItem() shouldBe ListViewModelToFlowInterface.Output.ChangeCountry(
             country = viewModel.viewState.value.country
           )
         }
@@ -139,7 +138,7 @@ class ListViewModelSpec : ViewModelSpec() {
             musicRepository.setChangeCountryResponse(Result.success(true))
             musicRepository.setReloadResponse(Result.failure(IOException("connection error")))
 
-            viewModel.setCountry(Country.UnitedKingdom)
+            viewModel.onInput(ListViewModelToFlowInterface.Input.SetCountry(Country.UnitedKingdom))
             awaitItem().country shouldBe Country.UnitedKingdom
           }
           expectNoEvents()
@@ -153,7 +152,7 @@ class ListViewModelSpec : ViewModelSpec() {
 
             musicRepository.setChangeCountryResponse(Result.success(false))
             musicRepository.setReloadResponse(Result.success(listOf(album(id = "1234"))))
-            viewModel.setCountry(Country.Germany)
+            viewModel.onInput(ListViewModelToFlowInterface.Input.SetCountry(Country.Germany))
             awaitItem().run {
               country shouldBe Country.Germany
               items shouldBe listOf(album(id = "1234"))
@@ -170,7 +169,7 @@ class ListViewModelSpec : ViewModelSpec() {
         snackBarService.events.test {
           viewModel.viewState.test {
             awaitItem()
-            viewModel.setCountry(Country.UnitedStates)
+            viewModel.onInput(ListViewModelToFlowInterface.Input.SetCountry(Country.UnitedStates))
             awaitItem().country shouldBe Country.UnitedStates
           }
           awaitItem().run {
@@ -188,7 +187,7 @@ class ListViewModelSpec : ViewModelSpec() {
         snackBarService.events.test {
           viewModel.viewState.test {
             awaitItem()
-            viewModel.setCountry(Country.Poland)
+            viewModel.onInput(ListViewModelToFlowInterface.Input.SetCountry(Country.Poland))
             awaitItem().country shouldBe Country.Poland
           }
           awaitItem().run {
@@ -220,7 +219,7 @@ class ListViewModelSpec : ViewModelSpec() {
           musicRepository.setChangeCountryResponse(Result.success(false))
           musicRepository.setReloadResponse(Result.failure(IOException("Connection problem")))
 
-          viewModel.setCountry(Country.Germany)
+          viewModel.onInput(ListViewModelToFlowInterface.Input.SetCountry(Country.Germany))
 
           awaitItem().run {
             message shouldBe TextResource.of("Connection problem")

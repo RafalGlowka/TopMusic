@@ -1,5 +1,6 @@
 include ':presentation'
 include ':data'
+include ':domain:testing'
 include ':domain'
 include ':app'
-include ':domain:testing'
+

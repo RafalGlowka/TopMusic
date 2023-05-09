@@ -3,14 +3,15 @@ package com.glowka.rafal.topmusic.presentation.flow.intro
 import com.glowka.rafal.topmusic.domain.architecture.TextResource
 import com.glowka.rafal.topmusic.domain.repository.MusicRepository
 import com.glowka.rafal.topmusic.domain.service.SnackBarService
-import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.presentation.R
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterface
 import com.glowka.rafal.topmusic.presentation.architecture.launch
-import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToFlowInterface.Event
+import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToFlowInterface.Input
+import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToFlowInterface.Output
 import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToViewInterface.State
 import com.glowka.rafal.topmusic.presentation.flow.intro.IntroViewModelToViewInterface.ViewEvents
 import com.google.android.material.snackbar.Snackbar
@@ -18,9 +19,10 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 
-interface IntroViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, Event> {
-  sealed interface Event : ScreenEvent {
-    object Finished : Event
+interface IntroViewModelToFlowInterface : ViewModelToFlowInterface<Input, Output> {
+  sealed interface Input : ScreenInput
+  sealed interface Output : ScreenOutput {
+    object Finished : Output
   }
 }
 
@@ -35,8 +37,8 @@ class IntroViewModelImpl(
   private val snackBarService: SnackBarService,
   private val musicRepository: MusicRepository,
 ) : IntroViewModelToFlowInterface, IntroViewModelToViewInterface,
-  BaseViewModel<EmptyParam, Event, State, ViewEvents>(
-    backPressedEvent = null
+  BaseViewModel<Input, Output, State, ViewEvents>(
+    backPressedOutput = null
   ) {
 
   var animation = false
@@ -81,7 +83,7 @@ class IntroViewModelImpl(
   }
 
   private fun showNext() {
-    sendEvent(event = Event.Finished)
+    sendOutput(output = Output.Finished)
   }
 
   override val viewState = MutableStateFlow(State())

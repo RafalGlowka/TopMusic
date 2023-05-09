@@ -118,6 +118,7 @@ class MusicRepositorySpec : DescribeSpec() {
       every { albumDao.deleteAll() } returns Unit
       every { musicDatabase.albumDao() } returns albumDao
       every { albumDao.insertAll(any()) } returns Unit
+      every { albumDao.deleteAlbumsWithCountryCode(any()) } returns Unit
 
       repository.reloadFromBackend().shouldBeSuccess().run {
         size shouldBe 1
@@ -139,7 +140,7 @@ class MusicRepositorySpec : DescribeSpec() {
       }
 
       coVerify { listApi.getAlbums(any()) }
-      verify { albumDao.deleteAll() }
+      verify { albumDao.deleteAlbumsWithCountryCode(any()) }
       verify { musicDatabase.albumDao() }
       verify { albumDao.insertAll(any()) }
     }

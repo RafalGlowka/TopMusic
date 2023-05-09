@@ -15,18 +15,18 @@ class IntroFlowImpl(
 ) :
   BaseFlow<EmptyParam, IntroResult>(flowScopeName = IntroFlow.SCOPE_NAME), IntroFlow {
 
-  override fun onStart(param: EmptyParam): Screen<*, *, *> {
+  override fun onStart(param: EmptyParam): Screen<*, *> {
     showScreen(
       screen = IntroFlow.Screens.Start,
-      param = EmptyParam.EMPTY,
-      onEvent = ::onStartEvent
+      onShowInput = null,
+      onScreenOutput = ::onStartEvent
     )
     return IntroFlow.Screens.Start
   }
 
-  private fun onStartEvent(event: IntroViewModelToFlowInterface.Event) {
+  private fun onStartEvent(event: IntroViewModelToFlowInterface.Output) {
     when (event) {
-      IntroViewModelToFlowInterface.Event.Finished -> showDashboard()
+      IntroViewModelToFlowInterface.Output.Finished -> showDashboard()
     }
   }
 

@@ -7,7 +7,7 @@ import com.glowka.rafal.topmusic.presentation.flow.dashboard.DashboardFlow
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.DashboardResult
 import com.glowka.rafal.topmusic.presentation.utils.FakeFlow
 import com.glowka.rafal.topmusic.presentation.utils.FakeScreenNavigator
-import com.glowka.rafal.topmusic.presentation.utils.emitScreenEvent
+import com.glowka.rafal.topmusic.presentation.utils.emitScreenOutput
 import com.glowka.rafal.topmusic.presentation.utils.shouldBeNavigationToScreen
 import io.kotest.matchers.booleans.shouldBeFalse
 import io.kotest.matchers.booleans.shouldBeTrue
@@ -40,9 +40,9 @@ class IntroFlowSpec : FlowSpec() {
           awaitItem()
             .shouldBeNavigationToScreen(
               screen = IntroFlow.Screens.Start,
-              param = EmptyParam.EMPTY,
+              onShowInput = null,
             )
-            .emitScreenEvent(IntroViewModelToFlowInterface.Event.Finished)
+            .emitScreenOutput(IntroViewModelToFlowInterface.Output.Finished)
 
           dashboardStartEvents.awaitItem().run {
             param shouldBe EmptyParam.EMPTY

@@ -3,7 +3,7 @@
 Example application build on https://rss.applemarketingtools.com/ public API as an architecture test case.
 
 The purpose of this application is to show usage of some basic libraries and architecture concepts:
-* Clean architecture
+* Clean architecture - Currently I resigned from UseCases (quite important part of clean architecture). All of them were 1:1 calls to repositories and do not provide any additional value. By doing so I would like to emphasize the need to rethink the elements of architecture in the context of a particular project. In bigger project use of them may provide additional value in with testing or code reusability. I would use cold-code solution like coroutine Flow in that case.  
 * MVVM + BusinessFlow 
 * Composer
 * coroutines, flows

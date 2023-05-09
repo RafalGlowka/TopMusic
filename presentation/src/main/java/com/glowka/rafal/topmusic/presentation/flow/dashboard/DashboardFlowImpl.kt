@@ -6,7 +6,7 @@ import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.logD
 import com.glowka.rafal.topmusic.presentation.architecture.BaseFlow
 import com.glowka.rafal.topmusic.presentation.architecture.Screen
-import com.glowka.rafal.topmusic.presentation.architecture.getViewModelToFlow
+import com.glowka.rafal.topmusic.presentation.architecture.sendInput
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface
@@ -18,50 +18,54 @@ sealed class DashboardResult {
 class DashboardFlowImpl :
   BaseFlow<EmptyParam, DashboardResult>(flowScopeName = DashboardFlow.SCOPE_NAME), DashboardFlow {
 
-  override fun onStart(param: EmptyParam): Screen<*, *, *> {
+  override fun onStart(param: EmptyParam): Screen<*, *> {
     return showScreen(
       screen = DashboardFlow.Screens.List,
-      param = EmptyParam.EMPTY
-    ) { event ->
-      when (event) {
-        is ListViewModelToFlowInterface.Event.ShowDetails -> showDetails(event)
-        ListViewModelToFlowInterface.Event.Back -> finish(result = DashboardResult.Terminated)
-        is ListViewModelToFlowInterface.Event.ChangeCountry -> showCountryDialog(event)
+      onShowInput = ListViewModelToFlowInterface.Input.Init,
+    ) { output ->
+      when (output) {
+        is ListViewModelToFlowInterface.Output.ShowDetails -> showDetails(output)
+        ListViewModelToFlowInterface.Output.Back -> finish(result = DashboardResult.Terminated)
+        is ListViewModelToFlowInterface.Output.ChangeCountry -> showCountryDialog(output)
       }
     }
   }
 
-  private fun showCountryDialog(event: ListViewModelToFlowInterface.Event.ChangeCountry) {
+  private fun showCountryDialog(event: ListViewModelToFlowInterface.Output.ChangeCountry) {
     showScreenDialog(
       screen = DashboardFlow.ScreenDialogs.Country,
-      param = CountryDialogViewModelToFlowInterface.Param(selected = event.country),
-      onEvent = { event ->
-        when (event) {
-          CountryDialogViewModelToFlowInterface.Event.Back -> hideScreenDialog(DashboardFlow.ScreenDialogs.Country)
-          is CountryDialogViewModelToFlowInterface.Event.CountryPicked -> {
+      onShowInput = CountryDialogViewModelToFlowInterface.Input.Init(selected = event.country),
+      onOutput = { output ->
+        when (output) {
+          CountryDialogViewModelToFlowInterface.Output.Back -> hideScreenDialog(DashboardFlow.ScreenDialogs.Country)
+          is CountryDialogViewModelToFlowInterface.Output.CountryPicked -> {
             hideScreenDialog(DashboardFlow.ScreenDialogs.Country)
-            getViewModelToFlow(screen = DashboardFlow.Screens.List).setCountry(country = event.country)
+            sendInput(
+              screen = DashboardFlow.Screens.List,
+              input = ListViewModelToFlowInterface.Input.SetCountry(selected = output.country)
+            )
           }
         }
       }
     )
   }
 
-  private fun showDetails(showDetails: ListViewModelToFlowInterface.Event.ShowDetails) {
+  private fun showDetails(showDetails: ListViewModelToFlowInterface.Output.ShowDetails) {
     logD("show Details")
     showScreen(
       screen = DashboardFlow.Screens.Details,
-      param = DetailsViewModelToFlowInterface.Param(
+      onShowInput = DetailsViewModelToFlowInterface.Input.Init(
         album = showDetails.album,
       ),
-    ) { event ->
-      when (event) {
-        DetailsViewModelToFlowInterface.Event.Back -> {
+    ) { output ->
+      when (output) {
+        DetailsViewModelToFlowInterface.Output.Back -> {
           switchBackTo(DashboardFlow.Screens.List)
         }
-        is DetailsViewModelToFlowInterface.Event.OpenURL -> {
+
+        is DetailsViewModelToFlowInterface.Output.OpenURL -> {
           val intent = Intent(Intent.ACTION_VIEW)
-          intent.data = Uri.parse(event.url)
+          intent.data = Uri.parse(output.url)
           navigator.startActivity(intent)
         }
       }

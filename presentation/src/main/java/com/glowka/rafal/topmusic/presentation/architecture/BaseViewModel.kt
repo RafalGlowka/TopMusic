@@ -1,7 +1,6 @@
 package com.glowka.rafal.topmusic.presentation.architecture
 
 import com.glowka.rafal.topmusic.domain.utils.CoroutineErrorHandler
-import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.inject
 import com.glowka.rafal.topmusic.domain.utils.logE
 import kotlinx.coroutines.CoroutineScope
@@ -21,24 +20,34 @@ interface ViewModelToViewInterface<VIEWSTATE : Any, VIEWEVENT : Any> {
   fun onBackPressed(): Boolean
 }
 
-interface ViewModelToFlowInterface<PARAM : Any, EVENT : ScreenEvent> {
-  var onScreenEvent: (EVENT) -> Unit
+interface ViewModelToFlowInterface<INPUT : ScreenInput, OUTPUT : ScreenOutput> {
+  var onScreenOutput: (OUTPUT) -> Unit
 
-  fun init(param: PARAM)
+  fun onInput(input: INPUT)
 
   fun clear()
 }
 
-interface ViewModelInterface<PARAM : Any, EVENT : ScreenEvent, VIEWSTATE : Any, VIEWEVENT : Any> :
+interface ViewModelInterface<
+    INPUT : ScreenInput,
+    OUTPUT : ScreenOutput,
+    VIEWSTATE : Any,
+    VIEWEVENT : Any
+    > :
   ViewModelToViewInterface<VIEWSTATE, VIEWEVENT>,
-  ViewModelToFlowInterface<PARAM, EVENT>
+  ViewModelToFlowInterface<INPUT, OUTPUT>
 
-abstract class BaseViewModel<PARAM : Any, EVENT : ScreenEvent, VIEWSTATE : Any, VIEWEVENT : Any>(
-  private val backPressedEvent: EVENT?
+abstract class BaseViewModel<
+    INPUT : ScreenInput,
+    OUTPUT : ScreenOutput,
+    VIEWSTATE : Any,
+    VIEWEVENT : Any
+    >(
+  private val backPressedOutput: OUTPUT?
 ) :
-  ViewModelInterface<PARAM, EVENT, VIEWSTATE, VIEWEVENT> {
+  ViewModelInterface<INPUT, OUTPUT, VIEWSTATE, VIEWEVENT> {
 
-  override lateinit var onScreenEvent: (EVENT) -> Unit
+  override lateinit var onScreenOutput: (OUTPUT) -> Unit
 
   //  var lifecycleOwner: LifecycleOwner? = null
   private var _viewModelScope: CloseableCoroutineScope? = null
@@ -50,18 +59,18 @@ abstract class BaseViewModel<PARAM : Any, EVENT : ScreenEvent, VIEWSTATE : Any, 
       return _viewModelScope!!
     }
 
-  override fun init(param: PARAM) {
-    if (param !is EmptyParam) logE("Function init(param) should be overrided")
+  override fun onInput(input: INPUT) {
+    logE("Function onInput(input) should be overrided")    
   }
 
-  protected fun sendEvent(event: EVENT) {
-    onScreenEvent(event)
+  protected fun sendOutput(output: OUTPUT) {
+    onScreenOutput(output)
   }
 
   override fun onBackPressed(): Boolean {
-    return backPressedEvent?.let { event ->
+    return backPressedOutput?.let { event ->
       launch {
-        sendEvent(event)
+        sendOutput(event)
       }
       true
     } ?: false

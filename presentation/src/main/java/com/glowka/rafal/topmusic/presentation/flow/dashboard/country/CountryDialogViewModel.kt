@@ -1,24 +1,29 @@
 package com.glowka.rafal.topmusic.presentation.flow.dashboard.country
 
+import com.glowka.rafal.topmusic.domain.architecture.TextResource
 import com.glowka.rafal.topmusic.domain.model.Country
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterface
-import com.glowka.rafal.topmusic.domain.architecture.TextResource
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface.Event
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface.Param
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface.Input
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface.Output
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToViewInterface.ViewEvents
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToViewInterface.ViewState
 import com.glowka.rafal.topmusic.presentation.model.nameResId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
-interface CountryDialogViewModelToFlowInterface : ViewModelToFlowInterface<Param, Event> {
-  data class Param(val selected: Country)
-  sealed class Event : ScreenEvent {
-    data class CountryPicked(val country: Country) : Event()
-    object Back : Event()
+interface CountryDialogViewModelToFlowInterface : ViewModelToFlowInterface<Input, Output> {
+
+  sealed interface Input : ScreenInput {
+    data class Init(val selected: Country) : Input
+  }
+
+  sealed interface Output : ScreenOutput {
+    data class CountryPicked(val country: Country) : Output
+    object Back : Output
   }
 }
 
@@ -36,8 +41,8 @@ interface CountryDialogViewModelToViewInterface : ViewModelToViewInterface<ViewS
 
 class CountryDialogViewModelImpl : CountryDialogViewModelToFlowInterface,
   CountryDialogViewModelToViewInterface,
-  BaseViewModel<Param, Event, ViewState, ViewEvents>(
-    backPressedEvent = Event.Back
+  BaseViewModel<Input, Output, ViewState, ViewEvents>(
+    backPressedOutput = Output.Back
   ) {
   override val viewState = Country.values().let { countries ->
     MutableStateFlow(
@@ -50,23 +55,28 @@ class CountryDialogViewModelImpl : CountryDialogViewModelToFlowInterface,
     )
   }
 
-  override fun init(param: Param) {
-    viewState.update { state ->
-      state.copy(selectedIndex = Country.values().indexOf(param.selected))
+  override fun onInput(input: Input) {
+    when (input) {
+      is Input.Init -> {
+        viewState.update { state ->
+          state.copy(selectedIndex = Country.values().indexOf(input.selected))
+        }
+      }
     }
   }
 
   override fun onViewEvent(event: ViewEvents) {
     when (event) {
       is ViewEvents.PickCountry -> {
-        sendEvent(
-          event = Event.CountryPicked(
+        sendOutput(
+          output = Output.CountryPicked(
             country = Country.values()[event.position],
           )
         )
       }
+
       ViewEvents.Back -> {
-        sendEvent(Event.Back)
+        sendOutput(output = Output.Back)
       }
     }
   }

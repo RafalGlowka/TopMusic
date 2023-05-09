@@ -38,10 +38,10 @@ android.testOptions {
 }
 
 dependencies {
-    implementation project(":domain")
+    api project(":domain")
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
     implementation "junit:junit:$junit_version"
-    implementation "io.mockk:mockk:$mockk_version"
+    api "io.mockk:mockk:$mockk_version"
     implementation "io.kotest:kotest-runner-junit5:$kotest_version"
     implementation "io.kotest:kotest-property:$kotest_version"
     implementation "app.cash.turbine:turbine:$turbine_version"

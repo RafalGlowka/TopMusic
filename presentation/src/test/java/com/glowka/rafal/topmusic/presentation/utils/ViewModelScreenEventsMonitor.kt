@@ -3,27 +3,27 @@ package com.glowka.rafal.topmusic.presentation.utils
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.launch
 
-class ViewModelScreenEventsMonitor<EVENT : ScreenEvent>(viewModel: BaseViewModel<*, EVENT, *, *>) {
-  private val _events = MutableSharedFlow<EVENT>()
-  val events: SharedFlow<EVENT> = _events
+class ViewModelScreenEventsMonitor<OUTPUT : ScreenOutput>(viewModel: BaseViewModel<*, OUTPUT, *, *>) {
+  private val _outputs = MutableSharedFlow<OUTPUT>()
+  val outputs: SharedFlow<OUTPUT> = _outputs
 
   init {
-    viewModel.onScreenEvent = { event ->
+    viewModel.onScreenOutput = { event ->
       MainScope().launch {
-        _events.emit(event)
+        _outputs.emit(event)
       }
     }
   }
 }
 
-suspend fun <EVENT : ScreenEvent> BaseViewModel<*, EVENT, *, *>.testScreenEvents(
-  validate: suspend ReceiveTurbine<EVENT>.() -> Unit
+suspend fun <OUTPUT : ScreenOutput> BaseViewModel<*, OUTPUT, *, *>.testScreenEvents(
+  validate: suspend ReceiveTurbine<OUTPUT>.() -> Unit
 ) {
-  ViewModelScreenEventsMonitor(this).events.test(validate = validate)
+  ViewModelScreenEventsMonitor(this).outputs.test(validate = validate)
 }

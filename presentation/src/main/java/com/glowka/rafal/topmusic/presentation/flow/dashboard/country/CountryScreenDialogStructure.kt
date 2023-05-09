@@ -4,8 +4,8 @@ import com.glowka.rafal.topmusic.presentation.architecture.ScreenDialogStructure
 import org.koin.core.scope.Scope
 
 object CountryScreenDialogStructure :
-  ScreenDialogStructure<CountryDialogViewModelToFlowInterface.Param, CountryDialogViewModelToFlowInterface.Event,
-      CountryDialogViewModelToFlowInterface, CountryDialogViewModelToViewInterface>() {
+  ScreenDialogStructure<CountryDialogViewModelToFlowInterface.Input,
+      CountryDialogViewModelToFlowInterface.Output, CountryDialogViewModelToViewInterface>() {
   override val fragmentClass = CountryDialogFragment::class
   override fun Scope.viewModelCreator() = CountryDialogViewModelImpl()
 

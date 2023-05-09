@@ -15,8 +15,8 @@ import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsView
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.service.SnackBarServiceImpl
 import com.glowka.rafal.topmusic.presentation.utils.FakeScreenNavigator
-import com.glowka.rafal.topmusic.presentation.utils.emitScreenDialogEvent
-import com.glowka.rafal.topmusic.presentation.utils.emitScreenEvent
+import com.glowka.rafal.topmusic.presentation.utils.emitScreenDialogOutput
+import com.glowka.rafal.topmusic.presentation.utils.emitScreenOutput
 import com.glowka.rafal.topmusic.presentation.utils.shouldBeHideScreenDialog
 import com.glowka.rafal.topmusic.presentation.utils.shouldBeNavigationToScreen
 import com.glowka.rafal.topmusic.presentation.utils.shouldBeNavigationToScreenDialog
@@ -43,8 +43,8 @@ class DashboardFlowSpec : FlowSpec() {
         }
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.List,
-          param = EmptyParam.EMPTY
-        ).emitScreenEvent(ListViewModelToFlowInterface.Event.Back)
+          onShowInput = ListViewModelToFlowInterface.Input.Init,
+        ).emitScreenOutput(ListViewModelToFlowInterface.Output.Back)
         flowTerminated.shouldBeTrue()
       }
     }
@@ -57,13 +57,13 @@ class DashboardFlowSpec : FlowSpec() {
         flow.start(navigator, EmptyParam.EMPTY) {}
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.List,
-          param = EmptyParam.EMPTY
-        ).emitScreenEvent(ListViewModelToFlowInterface.Event.ShowDetails(album))
+          onShowInput = ListViewModelToFlowInterface.Input.Init,
+        ).emitScreenOutput(ListViewModelToFlowInterface.Output.ShowDetails(album))
 
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.Details,
-          param = DetailsViewModelToFlowInterface.Param(album = album)
-        ).emitScreenEvent(DetailsViewModelToFlowInterface.Event.Back)
+          onShowInput = DetailsViewModelToFlowInterface.Input.Init(album = album)
+        ).emitScreenOutput(DetailsViewModelToFlowInterface.Output.Back)
 
         awaitItem().shouldBePopBackTo(screen = DashboardFlow.Screens.List)
       }
@@ -78,13 +78,13 @@ class DashboardFlowSpec : FlowSpec() {
         flow.start(navigator, EmptyParam.EMPTY) {}
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.List,
-          param = EmptyParam.EMPTY
-        ).emitScreenEvent(ListViewModelToFlowInterface.Event.ShowDetails(album))
+          onShowInput = ListViewModelToFlowInterface.Input.Init,
+        ).emitScreenOutput(ListViewModelToFlowInterface.Output.ShowDetails(album))
 
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.Details,
-          param = DetailsViewModelToFlowInterface.Param(album = album)
-        ).emitScreenEvent(DetailsViewModelToFlowInterface.Event.OpenURL(url))
+          onShowInput = DetailsViewModelToFlowInterface.Input.Init(album = album)
+        ).emitScreenOutput(DetailsViewModelToFlowInterface.Output.OpenURL(url))
 
         awaitItem().shouldBeStartActivity()
       }
@@ -98,14 +98,14 @@ class DashboardFlowSpec : FlowSpec() {
         flow.start(navigator, EmptyParam.EMPTY) {}
         awaitItem().shouldBeNavigationToScreen(
           screen = DashboardFlow.Screens.List,
-          param = EmptyParam.EMPTY
-        ).emitScreenEvent(ListViewModelToFlowInterface.Event.ChangeCountry(country))
+          onShowInput = ListViewModelToFlowInterface.Input.Init,
+        ).emitScreenOutput(ListViewModelToFlowInterface.Output.ChangeCountry(country))
 
         awaitItem().shouldBeNavigationToScreenDialog(
           screenDialog = DashboardFlow.ScreenDialogs.Country,
-          param = CountryDialogViewModelToFlowInterface.Param(selected = country)
+          param = CountryDialogViewModelToFlowInterface.Input.Init(selected = country)
         )
-          .emitScreenDialogEvent(CountryDialogViewModelToFlowInterface.Event.CountryPicked(Country.Poland))
+          .emitScreenDialogOutput(CountryDialogViewModelToFlowInterface.Output.CountryPicked(Country.Poland))
 
         awaitItem().shouldBeHideScreenDialog(
           screenDialog = DashboardFlow.ScreenDialogs.Country

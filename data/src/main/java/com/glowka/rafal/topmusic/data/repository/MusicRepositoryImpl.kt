@@ -79,7 +79,6 @@ class MusicRepositoryImpl(
       .map { albumDso ->
         albumDsoToAlbumMapper(albumDso)
       }
-    logD("load local storage for $country : $list")
     if (list.isNotEmpty()) {
       albums.emit(list)
     }

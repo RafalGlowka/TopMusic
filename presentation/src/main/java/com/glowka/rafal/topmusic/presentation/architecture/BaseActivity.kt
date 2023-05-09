@@ -40,13 +40,11 @@ open class BaseActivity : AppCompatActivity() {
 
   override fun onBackPressed() {
     val currentFragment = supportFragmentManager.fragments.lastBaseFragment()
-    if (currentFragment?.onBackPressed() != false) {
-      return
-    }
-    finish()
+    currentFragment?.onBackPressed()
+    return
   }
 }
 
 fun List<Fragment>.lastBaseFragment(): BaseFragment<*, *, *>? {
-  return lastOrNull { fragment -> fragment is BaseFragment<*, *, *> } as BaseFragment<*, *, *>
+  return lastOrNull { fragment -> fragment is BaseFragment<*, *, *> } as? BaseFragment<*, *, *>
 }

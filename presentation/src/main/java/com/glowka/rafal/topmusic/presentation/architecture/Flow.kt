@@ -1,20 +1,29 @@
 package com.glowka.rafal.topmusic.presentation.architecture
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import org.koin.core.qualifier.StringQualifier
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-data class FlowDestination<PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>>(
-  val screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-  val param: PARAM
+data class FlowDestination<
+    INPUT : ScreenInput,
+    OUTPUT : ScreenOutput
+    >(
+  val screen: Screen<INPUT, OUTPUT>,
+  val param: INPUT?
 )
 
-data class FlowDialogDestination<PARAM : Any, EVENT : ScreenEvent,
-    VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>>(
-  val screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-  val param: PARAM
+data class FlowDialogDestination<
+    INPUT : ScreenInput,
+    OUTPUT : ScreenOutput
+    >(
+  val screen: ScreenDialog<INPUT, OUTPUT>,
+  val param: INPUT?
 )
 
 interface Flow<FLOW_PARAM, FLOW_RESULT : Any> {
@@ -38,9 +47,9 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
       return _flowScope!!
     }
 
-  private var firstScreen: Screen<*, *, *>? = null
+  private var firstScreen: Screen<*, *>? = null
 
-  abstract fun onStart(param: FLOW_PARAM): Screen<*, *, *>
+  abstract fun onStart(param: FLOW_PARAM): Screen<*, *>
 
   override fun start(
     navigator: ScreenNavigator,
@@ -52,31 +61,40 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
     firstScreen = onStart(param = param)
   }
 
-  fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> showScreen(
-    screen: Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-    param: PARAM,
-    onEvent: (EVENT) -> Unit
-  ): Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW> {
-    navigator.push(createScope(), screen, param, onEvent)
+  fun <
+      INPUT : ScreenInput,
+      OUTPUT : ScreenOutput,
+      > showScreen(
+    screen: Screen<INPUT, OUTPUT>,
+    onShowInput: INPUT?,
+    onScreenOutput: (OUTPUT) -> Unit
+  ): Screen<INPUT, OUTPUT> {
+    navigator.push(createScope(), screen, onShowInput, onScreenOutput)
     return screen
   }
 
-  fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> showScreenDialog(
-    screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
-    param: PARAM,
-    onEvent: (EVENT) -> Unit
-  ): ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW> {
-    navigator.showDialog(createScope(), screen, param, onEvent)
+  fun <
+      INPUT : ScreenInput,
+      OUTPUT : ScreenOutput,
+      > showScreenDialog(
+    screen: ScreenDialog<INPUT, OUTPUT>,
+    onShowInput: INPUT?,
+    onOutput: (OUTPUT) -> Unit
+  ): ScreenDialog<INPUT, OUTPUT> {
+    navigator.showDialog(createScope(), screen, onShowInput, onOutput)
     return screen
   }
 
-  fun <PARAM : Any, EVENT : ScreenEvent, VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>> hideScreenDialog(
-    screen: ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>,
+  fun <
+      INPUT : ScreenInput,
+      OUTPUT : ScreenOutput,
+      > hideScreenDialog(
+    screen: ScreenDialog<INPUT, OUTPUT>,
   ) {
     navigator.hideDialog(screen)
   }
 
-  fun switchBackTo(screen: Screen<*, *, *>) {
+  fun switchBackTo(screen: Screen<*, *>) {
     navigator.popBackTo(screen = screen)
   }
 
@@ -88,25 +106,30 @@ abstract class BaseFlow<FLOW_PARAM, FLOW_RESULT : Any>(override val flowScopeNam
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<out Any, out ScreenEvent>>
-    BaseFlow<*, *>.getViewModelToFlow(
-  screen: Screen<*, *, VIEWMODEL_TO_FLOW>
-): VIEWMODEL_TO_FLOW {
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> BaseFlow<*, *>.sendInput(
+  screen: Screen<INPUT, OUTPUT>,
+  input: INPUT,
+) {
   val qualifier = StringQualifier(screen.screenTag)
   val scope = createScope()
-  return scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
-    ?: throw IllegalStateException("Missing ${screen.screenTag} in the scope $flowScopeName")
+  val viewModelToFlow =
+    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? ViewModelToFlowInterface<INPUT, OUTPUT>
+      ?: throw IllegalStateException("Missing ${screen.screenTag} in the scope $flowScopeName")
+  viewModelToFlow.onInput(input)
+
 }
 
 @Suppress("UNCHECKED_CAST")
-fun <VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<out Any, out ScreenEvent>>
-    BaseFlow<*, *>.getViewModelToFlow(
-  screen: ScreenDialog<*, *, VIEWMODEL_TO_FLOW>
-): VIEWMODEL_TO_FLOW {
-  val qualifier = StringQualifier(screen.screenTag)
+fun <INPUT : ScreenInput, OUTPUT : ScreenOutput> BaseFlow<*, *>.sendInput(
+  screenDialog: ScreenDialog<INPUT, OUTPUT>,
+  input: INPUT,
+) {
+  val qualifier = StringQualifier(screenDialog.screenTag)
   val scope = createScope()
-  return scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? VIEWMODEL_TO_FLOW
-    ?: throw IllegalStateException("Missing ${screen.screenTag} in the scope $flowScopeName")
+  val viewModelToFlow =
+    scope.get<ViewModelToFlowInterface<*, *>>(qualifier = qualifier) as? ViewModelToFlowInterface<INPUT, OUTPUT>
+      ?: throw IllegalStateException("Missing ${screenDialog.screenTag} in the scope $flowScopeName")
+  viewModelToFlow.onInput(input)
 }
 
 fun BaseFlow<*, *>.launch(

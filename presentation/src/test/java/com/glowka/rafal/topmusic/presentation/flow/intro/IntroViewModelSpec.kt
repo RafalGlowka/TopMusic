@@ -23,7 +23,6 @@ class IntroViewModelSpec : ViewModelSpec() {
         snackBarService = snackBarService,
         musicRepository = musicRepository,
       )
-      viewModel.init(param = EmptyParam.EMPTY)
       return viewModel
     }
 
@@ -40,7 +39,7 @@ class IntroViewModelSpec : ViewModelSpec() {
           advanceTimeBy(3000)
           expectNoEvents()
           advanceTimeBy(1100)
-          awaitItem() shouldBe IntroViewModelToFlowInterface.Event.Finished
+          awaitItem() shouldBe IntroViewModelToFlowInterface.Output.Finished
         }
       }
 
@@ -53,7 +52,7 @@ class IntroViewModelSpec : ViewModelSpec() {
           advanceTimeBy(5000)
           expectNoEvents()
           advanceTimeBy(6000)
-          awaitItem() shouldBe IntroViewModelToFlowInterface.Event.Finished
+          awaitItem() shouldBe IntroViewModelToFlowInterface.Output.Finished
         }
       }
 
@@ -135,7 +134,6 @@ class IntroViewModelSpec : ViewModelSpec() {
           expectNoEvents()
         }
       }
-
 
       it("shows error with retry if response from backend is empty") {
         val viewModel = createViewModel()

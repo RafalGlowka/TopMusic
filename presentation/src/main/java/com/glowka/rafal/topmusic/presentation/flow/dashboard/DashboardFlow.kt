@@ -5,9 +5,9 @@ import com.glowka.rafal.topmusic.presentation.architecture.Flow
 import com.glowka.rafal.topmusic.presentation.architecture.Screen
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenDialog
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenDialogStructure
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import com.glowka.rafal.topmusic.presentation.architecture.ScreenStructure
-import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryDialogViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.country.CountryScreenDialogStructure
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.details.DetailsScreenStructure
@@ -22,35 +22,33 @@ interface DashboardFlow : Flow<EmptyParam, DashboardResult> {
     const val SCOPE_NAME = "Dashboard"
   }
 
-  sealed class Screens<PARAM : Any, EVENT : ScreenEvent,
-      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>>(screenStructure: ScreenStructure<PARAM, EVENT, VIEWMODEL_TO_FLOW, *>) :
-    Screen<PARAM, EVENT, VIEWMODEL_TO_FLOW>(
-      flowScopeName = SCOPE_NAME,
-      screenStructure = screenStructure
-    ) {
+  sealed class Screens<INPUT : ScreenInput, OUTPUT : ScreenOutput>(
+    screenStructure: ScreenStructure<INPUT, OUTPUT, *>
+  ) : Screen<INPUT, OUTPUT>(
+    flowScopeName = SCOPE_NAME,
+    screenStructure = screenStructure
+  ) {
 
     object List :
-      Screens<EmptyParam, ListViewModelToFlowInterface.Event, ListViewModelToFlowInterface>(
+      Screens<ListViewModelToFlowInterface.Input, ListViewModelToFlowInterface.Output>(
         ListScreenStructure
       )
 
     object Details :
-      Screens<DetailsViewModelToFlowInterface.Param, DetailsViewModelToFlowInterface.Event, DetailsViewModelToFlowInterface>(
+      Screens<DetailsViewModelToFlowInterface.Input, DetailsViewModelToFlowInterface.Output>(
         DetailsScreenStructure
       )
   }
 
-  sealed class ScreenDialogs<
-      PARAM : Any,
-      EVENT : ScreenEvent,
-      VIEWMODEL_TO_FLOW : ViewModelToFlowInterface<PARAM, EVENT>
-      >(screenStructure: ScreenDialogStructure<PARAM, EVENT, VIEWMODEL_TO_FLOW, *>) :
-    ScreenDialog<PARAM, EVENT, VIEWMODEL_TO_FLOW>(
+  sealed class ScreenDialogs<INPUT : ScreenInput, OUTPUT : ScreenOutput>(
+    screenStructure: ScreenDialogStructure<INPUT, OUTPUT, *>
+  ) :
+    ScreenDialog<INPUT, OUTPUT>(
       flowScopeName = SCOPE_NAME,
       screenStructure = screenStructure,
     ) {
     object Country :
-      ScreenDialogs<CountryDialogViewModelToFlowInterface.Param, CountryDialogViewModelToFlowInterface.Event, CountryDialogViewModelToFlowInterface>(
+      ScreenDialogs<CountryDialogViewModelToFlowInterface.Input, CountryDialogViewModelToFlowInterface.Output>(
         CountryScreenDialogStructure
       )
   }

@@ -5,15 +5,16 @@ import com.glowka.rafal.topmusic.domain.model.Album
 import com.glowka.rafal.topmusic.domain.model.Country
 import com.glowka.rafal.topmusic.domain.repository.MusicRepository
 import com.glowka.rafal.topmusic.domain.service.SnackBarService
-import com.glowka.rafal.topmusic.domain.utils.EmptyParam
 import com.glowka.rafal.topmusic.domain.utils.logD
 import com.glowka.rafal.topmusic.presentation.R
 import com.glowka.rafal.topmusic.presentation.architecture.BaseViewModel
-import com.glowka.rafal.topmusic.presentation.architecture.ScreenEvent
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenInput
+import com.glowka.rafal.topmusic.presentation.architecture.ScreenOutput
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToFlowInterface
 import com.glowka.rafal.topmusic.presentation.architecture.ViewModelToViewInterface
 import com.glowka.rafal.topmusic.presentation.architecture.launch
-import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface.Event
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface.Input
+import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToFlowInterface.Output
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToViewInterface.ViewEvents
 import com.glowka.rafal.topmusic.presentation.flow.dashboard.list.ListViewModelToViewInterface.ViewState
 import com.google.android.material.snackbar.Snackbar
@@ -23,15 +24,21 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-interface ListViewModelToFlowInterface : ViewModelToFlowInterface<EmptyParam, Event> {
-  sealed class Event : ScreenEvent {
-    data class ShowDetails(val album: Album) : Event()
-    data class ChangeCountry(val country: Country) : Event()
-    object Back : Event()
+interface ListViewModelToFlowInterface : ViewModelToFlowInterface<Input, Output> {
+
+  sealed interface Input : ScreenInput {
+    object Init : Input
+
+    data class SetCountry(val selected: Country) : Input
+
+    object Refresh : Input
   }
 
-  fun refresh()
-  fun setCountry(country: Country)
+  sealed interface Output : ScreenOutput {
+    data class ShowDetails(val album: Album) : Output
+    data class ChangeCountry(val country: Country) : Output
+    object Back : Output
+  }
 }
 
 interface ListViewModelToViewInterface : ViewModelToViewInterface<ViewState, ViewEvents> {
@@ -53,12 +60,20 @@ class ListViewModelImpl(
   private val musicRepository: MusicRepository,
   private val snackBarService: SnackBarService,
 ) : ListViewModelToViewInterface, ListViewModelToFlowInterface,
-  BaseViewModel<EmptyParam, Event, ViewState, ViewEvents>(
-    backPressedEvent = Event.Back
+  BaseViewModel<Input, Output, ViewState, ViewEvents>(
+    backPressedOutput = Output.Back
   ) {
   override val viewState = MutableStateFlow(ViewState())
 
-  override fun init(param: EmptyParam) {
+  override fun onInput(input: Input) {
+    when (input) {
+      Input.Init -> init()
+      is Input.SetCountry -> setCountry(input.selected)
+      Input.Refresh -> refresh()
+    }
+  }
+
+  private fun init() {
     musicRepository.albums
       .onEach { albums -> updateList(albums) }
       .launchIn(viewModelScope)
@@ -72,17 +87,19 @@ class ListViewModelImpl(
   override fun onViewEvent(event: ViewEvents) {
     when (event) {
       is ViewEvents.PickedAlbum -> {
-        sendEvent(
-          event = Event.ShowDetails(
+        sendOutput(
+          output = Output.ShowDetails(
             album = event.album,
           )
         )
       }
+
       ViewEvents.RefreshList -> {
         refresh()
       }
+
       ViewEvents.PickCountry -> {
-        sendEvent(Event.ChangeCountry(country = viewState.value.country))
+        sendOutput(output = Output.ChangeCountry(country = viewState.value.country))
       }
     }
   }
@@ -109,7 +126,7 @@ class ListViewModelImpl(
     }
   }
 
-  override fun refresh() {
+  private fun refresh() {
     launch {
       viewState.update { state -> state.copy(isRefreshing = true) }
       musicRepository.reloadFromBackend()
@@ -121,7 +138,7 @@ class ListViewModelImpl(
     }
   }
 
-  override fun setCountry(country: Country) {
+  private fun setCountry(country: Country) {
     viewModelScope.launch {
       viewState.update { state -> state.copy(isRefreshing = true) }
       musicRepository.changeCountryWithLocalStorage(country)

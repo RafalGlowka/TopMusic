@@ -10,7 +10,7 @@ subprojects {
 buildscript {
     ext.kotlin_version = "1.8.20"
     ext.koin_version = "3.2.0"
-    ext.gradleplugin_version = '7.4.1'
+    ext.gradleplugin_version = '8.0.0'
     ext.detect_version = "1.20.0"
     ext.coroutines_version = "1.6.4"
 
@@ -27,9 +27,9 @@ buildscript {
     ext.androidx_appcombat_version = "1.6.1"
     ext.androidx_constraint_version = "2.1.4"
     ext.androidx_fragment_version = "1.5.7"
-    ext.androidx_material_version = "1.8.0"
-    ext.androidx_compose_version = "1.4.2"
-    ext.androidx_compose_material_version = "1.4.2"
+    ext.androidx_material_version = "1.9.0"
+    ext.androidx_compose_version = "1.4.3"
+    ext.androidx_compose_material_version = "1.4.3"
     ext.accompanist_version = "0.26.0-alpha"
     ext.leakcanary_version = "2.8.1"
 
